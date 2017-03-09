@@ -26,7 +26,7 @@ pip install python-redmine
 ### Redmine
 
 1. Get Redmine version from http://redmine/admin/info
-2. Get API key from user profile (may have to enable REST API in Admin if not seen)
+2. Get API key from user profile that has Admin access (may have to enable REST API in Admin if not seen)
 
 ### Saving config
 
