@@ -30,9 +30,9 @@ def handle_command(command, channel, username):
         if operator == "issueto" and len(commands) > 2:
             assigneduser = commands[1]
             newmsg = s.join(commands[2:])
-            response = create_issue(newmsg, assigneduser)
+            response = create_issue(newmsg, username, assigneduser)
         elif operator == "issue" and len(commands) > 1:
-            response = create_issue(msg, username)
+            response = create_issue(msg, username, username)
         elif operator == "help":
             response = show_commands()
     message = "@" + username + " " + response
@@ -68,17 +68,18 @@ def show_commands():
 """
     Redmine commands
 """
-def create_issue(text, username):
-    if text == None or text == "":
-        return ":exclamation: Missing subject to create issue; try again"
-    else:
+def create_issue(text, username, assigneduser):
         user = rc.user.filter(name=username)[0]
-        if user.id == None:
+    assigned = rc.user.filter(name=assigneduser)[0]
+    if user.id == None or assigned.id == None:
             return ":x: Failed to find your user name in Redmine"
-        issue = rc.issue.create(project_id='general', subject=text, tracker_id=2, assigned_to_id=user.id)
+    # impersonate user so it looks like the update is from them
+    rcn = Redmine(os.environ.get('REDMINE_HOST'), version=os.environ.get('REDMINE_VERSION'), \
+     key=os.environ.get('REDMINE_TOKEN'), impersonate=user.login)
+    issue = rcn.issue.create(project_id='general', subject=text, tracker_id=2, assigned_to_id=assigned.id)
         if issue.id:
             return ":white_check_mark: Created Issue <"+EXT_HOST+"/issues/"+str(issue.id)+ \
-	    "|#"+str(issue.id)+" "+issue.subject+"> assigned to "+user.firstname+" "+user.lastname
+        "|#"+str(issue.id)+" "+issue.subject+"> assigned to "+assigned.firstname+" "+assigned.lastname
         else:
             return ":x: Issue creation failed"
 
