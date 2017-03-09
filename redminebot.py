@@ -92,7 +92,7 @@ if __name__ == "__main__":
             if command and channel and username:
                 handle_command(command, channel, username)
             elif channel and username:
-                handle_command("", channel, username)
+                handle_command("help", channel, username)
             time.sleep(READ_WEBSOCKET_DELAY)
     else:
         print("Connection failed. Invalid Slack token or bot ID?")
