@@ -15,18 +15,18 @@ pip install python-redmine
 
 ### Slack
 
-1. Get token from Slack API for bot and save 
+1. Create [a bot named `@redminebot`](https://my.slack.com/services/new/bot) and save the API token
  
  `export BOT_TOKEN="<slack api token>"`
  
-2. Run the following Python scrip to get the bot's user ID for `BOT_ID`
+2. Run the following Python script to get the bot's user ID for `BOT_ID`
  
  `python print_bot_id.py`
 
 ### Redmine
 
 1. Get Redmine version from http://redmine/admin/info
-2. Get API key from user profile (may have to enable rest API in Admin if not seen)
+2. Get API key from user profile (may have to enable REST API in Admin if not seen)
 
 ### Saving config
 
