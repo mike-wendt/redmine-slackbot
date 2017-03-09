@@ -80,25 +80,16 @@ def show_commands():
 """
     Redmine commands
 """
-def create_issue(text, username, assigneduser):
-    user = rc.user.filter(name=username)[0]
-    assigned = rc.user.filter(name=assigneduser)[0]
-    if user.id == None or assigned.id == None:
-        return ":x: Failed to find your user name in Redmine"
-    # impersonate user so it looks like the update is from them
-    rcn = Redmine(os.environ.get('REDMINE_HOST'), version=os.environ.get('REDMINE_VERSION'), \
-     key=os.environ.get('REDMINE_TOKEN'), impersonate=user.login)
-    issue = rcn.issue.create(project_id='general', subject=text, tracker_id=2, assigned_to_id=assigned.id)
-    if issue.id:
-        return ":white_check_mark: Created Issue <"+EXT_HOST+"/issues/"+str(issue.id)+ \
-        "|#"+str(issue.id)+" "+issue.subject+"> assigned to "+assigned.firstname+" "+assigned.lastname
-    else:
-        return ":x: Issue creation failed"
-    
+def get_user(username):
+    users = rc.user.filter(name=username)
+    if len(users) == 0:
+        return None
+    return users[0]
+
 def list_issues(username):
-    user = rc.user.filter(name=username)[0]
-    if user.id == None:
-        return ":x: Failed to find your user name in Redmine"
+    user = get_user(username)
+    if not user:
+        return ":x: Failed to find user `"+username+"` in Redmine"
     result = rc.issue.filter(sort='project', assigned_to_id=user.id, status_id='open')
     response = ""
     if len(result) > 0:
@@ -111,9 +102,9 @@ def list_issues(username):
     return response
 
 def close_issue(text, issue, username):
-    user = rc.user.filter(name=username)[0]
-    if user.id == None:
-        return ":x: Failed to find your user name in Redmine"
+    user = get_user(username)
+    if not user:
+        return ":x: Failed to find user `"+username+"` in Redmine"
     # impersonate user so it looks like the update is from them
     rcn = Redmine(os.environ.get('REDMINE_HOST'), version=os.environ.get('REDMINE_VERSION'), \
      key=os.environ.get('REDMINE_TOKEN'), impersonate=user.login)
@@ -123,6 +114,23 @@ def close_issue(text, issue, username):
         "|#"+str(issue)+">"
     else:
         return ":x: Issue closing failed"
+
+def create_issue(text, username, assigneduser):
+    user = get_user(username)
+    if not user:
+        return ":x: Failed to find user `"+username+"` in Redmine"
+    assigned = get_user(assigneduser)
+    if not assigned:
+        return ":x: Failed to find user `"+assigneduser+"` in Redmine"
+    # impersonate user so it looks like the update is from them
+    rcn = Redmine(os.environ.get('REDMINE_HOST'), version=os.environ.get('REDMINE_VERSION'), \
+     key=os.environ.get('REDMINE_TOKEN'), impersonate=user.login)
+    issue = rcn.issue.create(project_id='general', subject=text, tracker_id=2, assigned_to_id=assigned.id)
+    if issue.id:
+        return ":white_check_mark: Created Issue <"+EXT_HOST+"/issues/"+str(issue.id)+ \
+        "|#"+str(issue.id)+" "+issue.subject+"> assigned to "+assigned.firstname+" "+assigned.lastname
+    else:
+        return ":x: Issue creation failed"
 
 if __name__ == "__main__":
     READ_WEBSOCKET_DELAY = 1 # 1 second delay between reading from firehose
