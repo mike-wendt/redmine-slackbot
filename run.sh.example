@@ -1,0 +1,9 @@
+#!/bin/bash
+source env/bin/activate
+export REDMINE_HOST="http://localhost"
+export REDMINE_EXT_HOST="http://172.0.0.1"
+export REDMINE_VERSION="3.3.1"
+export REDMINE_TOKEN=""
+export BOT_ID=""
+export BOT_TOKEN=""
+python redminebot.py
