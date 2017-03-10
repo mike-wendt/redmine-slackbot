@@ -30,7 +30,7 @@ def handle_command(command, channel, username):
     response = ":question: Unknown/invalid command - Try `help` for a list of supported commands"
     commands = command.split()
     if commands:
-        operator = commands[0]
+        operator = commands[0].lower()
         s = " "
         msg = s.join(commands[1:])
         if operator == "issueto" and len(commands) > 2:
@@ -68,7 +68,7 @@ def parse_slack_output(slack_rtm_output):
                 profile = sc.api_call("users.info", user=output['user'])
                 username = profile['user']['name']
                 # return text after the @ mention, whitespace removed
-                return output['text'].split(AT_BOT)[1].strip().lower(), \
+                return output['text'].split(AT_BOT)[1].strip(), \
                        output['channel'], username
     return None, None, None
 
