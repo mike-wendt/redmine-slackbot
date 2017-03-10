@@ -45,7 +45,7 @@ def handle_command(command, channel, username):
             response = close_issue(newmsg, issue, username)
         elif operator == "list":
             response = list_issues(username)
-        elif operator == "listfrom" and len(commands) > 1:
+        elif operator == "listfor" and len(commands) > 1:
             listuser = commands[1]
             response = list_issues(listuser) 
         elif operator == "help":
@@ -81,7 +81,7 @@ def show_commands():
 	   "`issueto <name> <subject>` - creates new issue and assigns it to `<name>`\n" \
            "`close <issue #> <comment>` - closes an issue with the following comment\n" \
            "`list` - list all open issues assigned to you\n" \
-           "`listfrom <name>` - list all open issues assigned to `<name>`"
+           "`listfor <name>` - list all open issues assigned to `<name>`"
 
 """
     Redmine commands
