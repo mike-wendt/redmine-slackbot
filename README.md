@@ -51,6 +51,18 @@ bash run.sh
 ```
 Recommended to use `supervisor` if you want a long running service that is fault tolerant
 
+### Supervisord example conf
+
+```
+[program:redminebot]
+command=/opt/redminebot/run.sh    ; the program (relative uses PATH, can take args)
+numprocs=1                        ; number of processes copies to start (def 1)
+directory=/opt/redminebot         ; directory to cwd to before exec (def no cwd)
+autostart=true                    ; start at supervisord start (default: true)
+stopasgroup=true                  ; send stop signal to the UNIX process group (default false)
+user=redminebot                   ; setuid to this UNIX account to run the program
+```
+
 ## Source
 
 Thanks to https://www.fullstackpython.com/blog/build-first-slack-bot-python.html for the great starting point/guide
