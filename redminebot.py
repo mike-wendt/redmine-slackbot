@@ -29,31 +29,34 @@ def handle_command(command, channel, username):
     """
     response = ":question: Unknown/invalid command - Try `help` for a list of supported commands"
     commands = command.split()
-    if commands:
-        operator = commands[0].lower()
-        s = " "
-        msg = s.join(commands[1:])
-        if operator == "issueto" and len(commands) > 2:
-            assigneduser = commands[1]
-            newmsg = s.join(commands[2:])
-            response = create_issue(newmsg, username, assigneduser)
-        elif operator == "issue" and len(commands) > 1:
-            response = create_issue(msg, username, username)
-        elif operator == "update" and len(commands) > 2:
-            issue = commands[1]
-            newmsg = s.join(commands[2:])
-            response = update_issue(newmsg, issue, username)
-        elif operator == "close" and len(commands) > 2:
-            issue = commands[1]
-            newmsg = s.join(commands[2:])
-            response = close_issue(newmsg, issue, username)
-        elif operator == "list":
-            response = list_issues(username)
-        elif operator == "listfor" and len(commands) > 1:
-            listuser = commands[1]
-            response = list_issues(listuser) 
-        elif operator == "help":
-            response = show_commands()
+    try:
+        if commands:
+            operator = commands[0].lower()
+            s = " "
+            msg = s.join(commands[1:])
+            if operator == "issueto" and len(commands) > 2:
+                assigneduser = commands[1]
+                newmsg = s.join(commands[2:])
+                response = create_issue(newmsg, username, assigneduser)
+            elif operator == "issue" and len(commands) > 1:
+                response = create_issue(msg, username, username)
+            elif operator == "update" and len(commands) > 2:
+                issue = commands[1]
+                newmsg = s.join(commands[2:])
+                response = update_issue(newmsg, issue, username)
+            elif operator == "close" and len(commands) > 2:
+                issue = commands[1]
+                newmsg = s.join(commands[2:])
+                response = close_issue(newmsg, issue, username)
+            elif operator == "list":
+                response = list_issues(username)
+            elif operator == "listfor" and len(commands) > 1:
+                listuser = commands[1]
+                response = list_issues(listuser) 
+            elif operator == "help":
+                response = show_commands()
+    except RuntimeError as e:
+        response = e[0]
     message = "<@" + username + "> " + response
     sc.api_call("chat.postMessage", channel=channel, \
                           text=message, as_user=True)
@@ -80,24 +83,33 @@ def show_commands():
         Return ist of commands that bot can handle
     """
     return ":wrench: List of supported commands:\n" \
-           "`issue <subject>` - creates new issue and assigns it to you\n" \
-           "`issueto <name> <subject>` - creates new issue and assigns it to `<name>`\n" \
-           "`update <issue #> <comment>` - updates an issue with the following `comment`\n" \
-           "`close <issue #> <comment>` - closes an issue with the following comment\n" \
-           "`list` - list all open issues assigned to you\n" \
-           "`listfor <name>` - list all open issues assigned to `<name>`"
+            "`issue <subject>` - creates new issue and assigns it to you\n" \
+            "`issueto <name> <subject>` - creates new issue and assigns it to `<name>`\n" \
+            "`update <issue #> <comment>` - updates an issue with the following `comment`\n" \
+            "`close <issue #> <comment>` - closes an issue with the following comment\n" \
+            "`list` - list all open issues assigned to you\n" \
+            "`listfor <name>` - list all open issues assigned to `<name>`"
 
 """
     Redmine commands
 """
 def get_user(username):
-    users = rc.user.filter(name=username)
-    if len(users) == 0:
-        return None
-    return users[0]
+    try:
+        return rc.user.filter(name=username)[0]
+    except:
+        return RuntimeError(":x: Failed to find user `"+username+"` in Redmine")
+
+def get_issue(issueid):
+    try:
+        return rc.issue.get(int(issueid)).id
+    except:
+        raise RuntimeError(":x: Failed to find issue ID `"+issueid+"` in Redmine")
 
 def impersonate_redmine(userlogin):
-    return Redmine(REDMINE_HOST, version=REDMINE_VERSION, key=REDMINE_TOKEN, impersonate=userlogin)
+    try:
+        return Redmine(REDMINE_HOST, version=REDMINE_VERSION, key=REDMINE_TOKEN, impersonate=userlogin)
+    except:
+        raise RuntimeError(":x: Failed impersonate user `"+userlogin+"` in Redmine")
 
 def issue_url(issueid):
     return "<"+REDMINE_EXT_HOST+"/issues/"+str(issueid)+"|#"+str(issueid)+">"
@@ -107,56 +119,51 @@ def issue_subject_url(issueid, subject):
 
 def list_issues(username):
     user = get_user(username)
-    if not user:
-        return ":x: Failed to find user `"+username+"` in Redmine"
-    result = rc.issue.filter(sort='project', assigned_to_id=user.id, status_id='open')
-    response = ""
-    if len(result) > 0:
-        response = ":book: Open issues assigned to "+user.firstname+" "+user.lastname+":\n"
-        for issue in result:
-            response += ""+issue.project.name+" "+issue_subject_url(issue.id, issue.subject)+"\n"
-    else:
-        response = ":thumbsup_all: No open issues assigned to "+user.firstname+" "+user.lastname
-    return response
-
+    try:
+        result = rc.issue.filter(sort='project', assigned_to_id=user.id, status_id='open')
+        response = ""
+        if len(result) > 0:
+            response = ":book: Open issues assigned to "+user.firstname+" "+user.lastname+":\n"
+            for issue in result:
+                response += ""+issue.project.name+" "+issue_subject_url(issue.id, issue.subject)+"\n"
+        else:
+            response = ":thumbsup_all: No open issues assigned to "+user.firstname+" "+user.lastname
+        return response
+    except:
+        raise RuntimeError(":x: List operation failed")
+    
 def update_issue(text, issue, username):
     user = get_user(username)
-    if not user:
-        return ":x: Failed to find user `"+username+"` in Redmine"
+    issueid = get_issue(issue)
     # impersonate user so it looks like the update is from them
     rcn = impersonate_redmine(user.login)
-    result = rcn.issue.update(issue, notes=text)
-    if result:
-        return ":memo: Updated Issue "+issue_url(issue)+" with comment `"+text+"`"
-    else:
-        return ":x: Issue update failed"
+    try:
+        result = rcn.issue.update(issueid, notes=text)
+        return ":memo: Updated Issue "+issue_url(issueid)+" with comment `"+text+"`"
+    except:
+        raise RuntimeError(":x: Issue update failed")
 
 def close_issue(text, issue, username):
     user = get_user(username)
-    if not user:
-        return ":x: Failed to find user `"+username+"` in Redmine"
+    issueid = get_issue(issue)
     # impersonate user so it looks like the update is from them
     rcn = impersonate_redmine(user.login)
-    result = rcn.issue.update(issue, status_id=REDMINE_CLOSE_ID, notes=text, done_ratio=100)
-    if result:
-        return ":white_check_mark: Closed Issue "+issue_url(issue)+" with comment `"+text+"`"
-    else:
-        return ":x: Issue closing failed"
+    try:
+        result = rcn.issue.update(issueid, status_id=REDMINE_CLOSE_ID, notes=text, done_ratio=100)
+        return ":white_check_mark: Closed Issue "+issue_url(issueid)+" with comment `"+text+"`"
+    except:
+        raise RuntimeError(":x: Issue closing failed")
 
 def create_issue(text, username, assigneduser):
     user = get_user(username)
-    if not user:
-        return ":x: Failed to find user `"+username+"` in Redmine"
     assigned = get_user(assigneduser)
-    if not assigned:
-        return ":x: Failed to find user `"+assigneduser+"` in Redmine"
     # impersonate user so it looks like the update is from them
     rcn = impersonate_redmine(user.login)
-    issue = rcn.issue.create(project_id=REDMINE_PROJECT, subject=text, tracker_id=REDMINE_TRACKER_ID, assigned_to_id=assigned.id)
-    if issue.id:
+    try:
+        issue = rcn.issue.create(project_id=REDMINE_PROJECT, subject=text, tracker_id=REDMINE_TRACKER_ID, assigned_to_id=assigned.id)
         return ":white_check_mark: Created Issue "+issue_subject_url(issue.id,issue.subject)+" assigned to "+assigned.firstname+" "+assigned.lastname
-    else:
-        return ":x: Issue creation failed"
+    except:
+        raise RuntimeError(":x: Issue creation failed")
 
 if __name__ == "__main__":
     READ_WEBSOCKET_DELAY = 1 # 1 second delay between reading from firehose
