@@ -3,17 +3,23 @@ import time
 from slackclient import SlackClient
 from redmine import Redmine
 
-# redminebot's ID and external host from environment variables
+# read environment variables
+REDMINE_HOST = os.environ.get('REDMINE_HOST')
+REDMINE_EXT_HOST = os.environ.get('REDMINE_EXT_HOST')
+REDMINE_VERSION = os.environ.get('REDMINE_VERSION')
+REDMINE_TOKEN = os.environ.get('REDMINE_TOKEN')
+REDMINE_CLOSE_ID = os.environ.get('REDMINE_CLOSE_ID')
+REDMINE_PROJECT = os.environ.get('REDMINE_PROJECT')
+REDMINE_TRACKER_ID = os.environ.get('REDMINE_TRACKER_ID')
 BOT_ID = os.environ.get('BOT_ID')
-EXT_HOST = os.environ.get('REDMINE_EXT_HOST')
+BOT_TOKEN = os.environ.get('BOT_TOKEN')
 
 # constants
 AT_BOT = "<@" + BOT_ID + ">"
 
 # instantiate Slack & Redmine clients
-sc = SlackClient(os.environ.get('BOT_TOKEN'))
-rc = Redmine(os.environ.get('REDMINE_HOST'), version=os.environ.get('REDMINE_VERSION'), \
-     key=os.environ.get('REDMINE_TOKEN'))
+sc = SlackClient(BOT_TOKEN)
+rc = Redmine(REDMINE_HOST, version=REDMINE_VERSION, key=REDMINE_TOKEN)
 
 def handle_command(command, channel, username):
     """
@@ -86,6 +92,15 @@ def get_user(username):
         return None
     return users[0]
 
+def impersonate_redmine(userlogin):
+    return Redmine(REDMINE_HOST, version=REDMINE_VERSION, key=REDMINE_TOKEN, impersonate=userlogin)
+
+def issue_url(issueid):
+    return "<"+REDMINE_EXT_HOST+"/issues/"+str(issueid)+"|#"+str(issueid)+">"
+
+def issue_subject_url(issueid, subject):
+    return "<"+REDMINE_EXT_HOST+"/issues/"+str(issueid)+"|#"+str(issueid)+" "+subject+">"
+
 def list_issues(username):
     user = get_user(username)
     if not user:
@@ -95,8 +110,7 @@ def list_issues(username):
     if len(result) > 0:
         response = ":book: Open issues assigned to "+user.firstname+" "+user.lastname+":\n"
         for issue in result:
-            response += ""+issue.project.name+" <"+EXT_HOST+"/issues/"+str(issue.id)+"|#"+str(issue.id)+ \
-                        " "+issue.subject+">\n"
+            response += ""+issue.project.name+" "+issue_subject_url(issue.id, issue.subject)+"\n"
     else:
         response = ":thumbsup_all: No open issues assigned to "+user.firstname+" "+user.lastname
     return response
@@ -106,12 +120,10 @@ def close_issue(text, issue, username):
     if not user:
         return ":x: Failed to find user `"+username+"` in Redmine"
     # impersonate user so it looks like the update is from them
-    rcn = Redmine(os.environ.get('REDMINE_HOST'), version=os.environ.get('REDMINE_VERSION'), \
-     key=os.environ.get('REDMINE_TOKEN'), impersonate=user.login)
-    result = rcn.issue.update(issue, status_id=5, notes=text, done_ratio=100)
+    rcn = impersonate_redmine(user.login)
+    result = rcn.issue.update(issue, status_id=REDMINE_CLOSE_ID, notes=text, done_ratio=100)
     if result:
-        return ":white_check_mark: Closed Issue <"+EXT_HOST+"/issues/"+str(issue)+ \
-        "|#"+str(issue)+">"
+        return ":white_check_mark: Closed Issue "+issue_url(issue)+" with comment `"+text+"`"
     else:
         return ":x: Issue closing failed"
 
@@ -123,12 +135,10 @@ def create_issue(text, username, assigneduser):
     if not assigned:
         return ":x: Failed to find user `"+assigneduser+"` in Redmine"
     # impersonate user so it looks like the update is from them
-    rcn = Redmine(os.environ.get('REDMINE_HOST'), version=os.environ.get('REDMINE_VERSION'), \
-     key=os.environ.get('REDMINE_TOKEN'), impersonate=user.login)
-    issue = rcn.issue.create(project_id='general', subject=text, tracker_id=2, assigned_to_id=assigned.id)
+    rcn = impersonate_redmine(user.login)
+    issue = rcn.issue.create(project_id=REDMINE_PROJECT, subject=text, tracker_id=REDMINE_TRACKER_ID, assigned_to_id=assigned.id)
     if issue.id:
-        return ":white_check_mark: Created Issue <"+EXT_HOST+"/issues/"+str(issue.id)+ \
-        "|#"+str(issue.id)+" "+issue.subject+"> assigned to "+assigned.firstname+" "+assigned.lastname
+        return ":white_check_mark: Created Issue "+issue_subject_url(issue.id,issue.subject)+" assigned to "+assigned.firstname+" "+assigned.lastname
     else:
         return ":x: Issue creation failed"
 
