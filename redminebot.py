@@ -39,6 +39,10 @@ def handle_command(command, channel, username):
             response = create_issue(newmsg, username, assigneduser)
         elif operator == "issue" and len(commands) > 1:
             response = create_issue(msg, username, username)
+        elif operator == "update" and len(commands) > 2:
+            issue = commands[1]
+            newmsg = s.join(commands[2:])
+            response = update_issue(newmsg, issue, username)
         elif operator == "close" and len(commands) > 2:
             issue = commands[1]
             newmsg = s.join(commands[2:])
@@ -53,7 +57,6 @@ def handle_command(command, channel, username):
     message = "<@" + username + "> " + response
     sc.api_call("chat.postMessage", channel=channel, \
                           text=message, as_user=True)
-
 
 def parse_slack_output(slack_rtm_output):
     """
@@ -78,7 +81,8 @@ def show_commands():
     """
     return ":wrench: List of supported commands:\n" \
            "`issue <subject>` - creates new issue and assigns it to you\n" \
-	   "`issueto <name> <subject>` - creates new issue and assigns it to `<name>`\n" \
+           "`issueto <name> <subject>` - creates new issue and assigns it to `<name>`\n" \
+           "`update <issue #> <comment>` - updates an issue with the following `comment`\n" \
            "`close <issue #> <comment>` - closes an issue with the following comment\n" \
            "`list` - list all open issues assigned to you\n" \
            "`listfor <name>` - list all open issues assigned to `<name>`"
@@ -114,6 +118,18 @@ def list_issues(username):
     else:
         response = ":thumbsup_all: No open issues assigned to "+user.firstname+" "+user.lastname
     return response
+
+def update_issue(text, issue, username):
+    user = get_user(username)
+    if not user:
+        return ":x: Failed to find user `"+username+"` in Redmine"
+    # impersonate user so it looks like the update is from them
+    rcn = impersonate_redmine(user.login)
+    result = rcn.issue.update(issue, notes=text)
+    if result:
+        return ":memo: Updated Issue "+issue_url(issue)+" with comment `"+text+"`"
+    else:
+        return ":x: Issue update failed"
 
 def close_issue(text, issue, username):
     user = get_user(username)
