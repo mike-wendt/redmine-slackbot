@@ -50,7 +50,7 @@ def handle_command(command, channel, username):
             response = list_issues(listuser) 
         elif operator == "help":
             response = show_commands()
-    message = "@" + username + " " + response
+    message = "<@" + username + "> " + response
     sc.api_call("chat.postMessage", channel=channel, \
                           text=message, as_user=True)
 
