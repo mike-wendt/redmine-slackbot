@@ -196,10 +196,11 @@ def status_issue(text, issue, status, username):
 def close_issue(text, issue, username):
     user = get_user(username)
     issueid = get_issue(issue)
+    today = time.strftime('%Y-%m-%d')
     # impersonate user so it looks like the update is from them
     rcn = impersonate_redmine(user.login)
     try:
-        result = rcn.issue.update(issueid, status_id=REDMINE_CLOSE_ID, notes=text, done_ratio=100)
+        result = rcn.issue.update(issueid, status_id=REDMINE_CLOSED_ID, notes=text, done_ratio=100, due_date=today)
         return ":white_check_mark: Closed Issue "+issue_url(issueid)+" with comment `"+text+"`"
     except:
         raise RuntimeError(":x: Issue closing failed")
