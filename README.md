@@ -27,9 +27,9 @@ pip install python-redmine
 
 1. Get Redmine version from `http://redmine/admin/info`
 2. Get API key from user profile that has Admin access (may have to enable REST API in Admin if not seen)
-3. Locate the ID for `Closed` status 
- * Go to `http://redmine/issue_statuses` and click on the status named `Closed` the number in the URL will be the ID
- * For example: the status `Closed` ID is `5` from this URL `http://redmine/issue_statuses/5/edit`
+3. Locate the IDs for all issue statuses
+ * Go to `http://redmine/issue_statuses` and click on each status; the number in the URL will be the ID
+ * For example: the status ID is `5` from this URL `http://redmine/issue_statuses/5/edit`
 4. Create a project called `General` or specify another project by its identifier for all new issues to be created in
  * To find an existing project identifier, load the project page and look at the URL; all text to the right of `project/` is the identifier
  * For example: the project identifier is `general` from the URL `http://redmine/projects/general` 
@@ -49,7 +49,12 @@ export REDMINE_HOST="http://localhost"
 export REDMINE_EXT_HOST="http://172.0.0.1"
 export REDMINE_VERSION="3.3.1"
 export REDMINE_TOKEN="<redmine api token>"
-export REDMINE_CLOSE_ID="5"
+export REDMINE_NEW_ID="1"
+export REDMINE_INPROGRESS_ID="2"
+export REDMINE_RESOLVED_ID="3"
+export REDMINE_FEEDBACK_ID="4"
+export REDMINE_CLOSED_ID="5"
+export REDMINE_REJECTED_ID="6"
 export REDMINE_PROJECT="general"
 export REDMINE_TRACKER_ID="2"
 export BOT_ID="<from print_bot_id.py>"

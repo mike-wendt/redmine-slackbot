@@ -8,7 +8,12 @@ REDMINE_HOST = os.environ.get('REDMINE_HOST')
 REDMINE_EXT_HOST = os.environ.get('REDMINE_EXT_HOST')
 REDMINE_VERSION = os.environ.get('REDMINE_VERSION')
 REDMINE_TOKEN = os.environ.get('REDMINE_TOKEN')
-REDMINE_CLOSE_ID = os.environ.get('REDMINE_CLOSE_ID')
+REDMINE_NEW_ID = os.environ.get('REDMINE_NEW_ID')
+REDMINE_INPROGRESS_ID = os.environ.get('REDMINE_INPROGRESS_ID')
+REDMINE_FEEDBACK_ID = os.environ.get('REDMINE_FEEDBACK_ID')
+REDMINE_RESOLVED_ID = os.environ.get('REDMINE_RESOLVED_ID')
+REDMINE_CLOSED_ID = os.environ.get('REDMINE_CLOSED_ID')
+REDMINE_REJECTED_ID = os.environ.get('REDMINE_REJECTED_ID')
 REDMINE_PROJECT = os.environ.get('REDMINE_PROJECT')
 REDMINE_TRACKER_ID = os.environ.get('REDMINE_TRACKER_ID')
 BOT_ID = os.environ.get('BOT_ID')
@@ -16,6 +21,14 @@ BOT_TOKEN = os.environ.get('BOT_TOKEN')
 
 # constants
 AT_BOT = "<@" + BOT_ID + ">"
+STATUSES = {
+    'new': (REDMINE_NEW_ID, "New"),
+    'in': (REDMINE_INPROGRESS_ID, "In Progress"),
+    'feed': (REDMINE_FEEDBACK_ID, "Feedback"),
+    'resolve': (REDMINE_RESOLVED_ID, "Resolved"),
+    'close': (REDMINE_CLOSED_ID, "Closed"),
+    'reject': (REDMINE_REJECTED_ID, "Rejected")
+}
 
 # instantiate Slack & Redmine clients
 sc = SlackClient(BOT_TOKEN)
@@ -44,6 +57,11 @@ def handle_command(command, channel, username):
                 issue = commands[1]
                 newmsg = s.join(commands[2:])
                 response = update_issue(newmsg, issue, username)
+            elif operator == "status" and len(commands) > 3:
+                issue = commands[1]
+                status = commands[2]
+                newmsg = s.join(commands[3:])
+                response = status_issue(newmsg, issue, status, username)
             elif operator == "close" and len(commands) > 2:
                 issue = commands[1]
                 newmsg = s.join(commands[2:])
@@ -86,6 +104,8 @@ def show_commands():
             "`issue <subject>` - creates new issue and assigns it to you\n" \
             "`issueto <name> <subject>` - creates new issue and assigns it to `<name>`\n" \
             "`update <issue #> <comment>` - updates an issue with the following `comment`\n" \
+            "`status <issue #> <status> <comment>` - changes the status of an issue\n" \
+            "\t`<status>` must be one of the following: "+list_status_keys()+"\n" \
             "`close <issue #> <comment>` - closes an issue with the following comment\n" \
             "`list` - list all open issues assigned to you\n" \
             "`listfor <name>` - list all open issues assigned to `<name>`"
@@ -105,6 +125,24 @@ def get_issue(issueid):
     except:
         raise RuntimeError(":x: Failed to find issue ID `"+issueid+"` in Redmine")
 
+def get_status(status):
+    try:
+        return STATUSES.get(status)[0], STATUSES.get(status)[1]
+    except:
+        raise RuntimeError(":x: Unknown status code, use one of the following:\n"+list_statuses())
+
+def list_status_keys():
+    response = ""
+    for i in STATUSES:
+        response += "`"+i+"` "
+    return response
+
+def list_statuses():
+    response = ""
+    for i in STATUSES:
+        response += "`"+i+"` - "+STATUSES[i][1]+"\n"
+    return response
+    
 def impersonate_redmine(userlogin):
     try:
         return Redmine(REDMINE_HOST, version=REDMINE_VERSION, key=REDMINE_TOKEN, impersonate=userlogin)
@@ -143,6 +181,18 @@ def update_issue(text, issue, username):
     except:
         raise RuntimeError(":x: Issue update failed")
 
+def status_issue(text, issue, status, username):
+    user = get_user(username)
+    issueid = get_issue(issue)
+    statusid, statusname = get_status(status)
+    # impersonate user so it looks like the update is from them
+    rcn = impersonate_redmine(user.login)
+    try:
+        result = rcn.issue.update(issueid, status_id=statusid, notes=text)
+        return ":white_check_mark: Changed status of Issue "+issue_url(issueid)+" to `"+statusname+"` with comment `"+text+"`"
+    except:
+        raise RuntimeError(":x: Issue status update failed")
+        
 def close_issue(text, issue, username):
     user = get_user(username)
     issueid = get_issue(issue)
