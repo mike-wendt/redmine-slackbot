@@ -1,6 +1,10 @@
 # redmine-slackbot
 Slackbot for Redmine to add issues and assign them to yourself or others
 
+## Overview
+
+`redmine-slackbot` is a Slackbot that runs locally on a Redmine server providing access to create, update, list, and close issues from Slack. The motivtion to build this bot was to more easily access and track issues with Redmine and not have to be on VPN to do so. Since the Slackbot runs locally on the Redmine server it reaches out to Slack and listens for incoming messages removing the need for a VPN connection.
+
 ## Install
 
 ```
