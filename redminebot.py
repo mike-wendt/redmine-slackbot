@@ -3,7 +3,9 @@ import time
 from slackclient import SlackClient
 from redmine import Redmine
 
-# read environment variables
+"""
+    Load environment variables
+"""
 REDMINE_HOST = os.environ.get('REDMINE_HOST')
 REDMINE_EXT_HOST = os.environ.get('REDMINE_EXT_HOST')
 REDMINE_VERSION = os.environ.get('REDMINE_VERSION')
@@ -19,7 +21,9 @@ REDMINE_TRACKER_ID = os.environ.get('REDMINE_TRACKER_ID')
 BOT_ID = os.environ.get('BOT_ID')
 BOT_TOKEN = os.environ.get('BOT_TOKEN')
 
-# constants
+"""
+    CONSTANTS
+"""
 AT_BOT = "<@" + BOT_ID + ">"
 STATUSES = {
     'new': (REDMINE_NEW_ID, "New"),
@@ -30,7 +34,9 @@ STATUSES = {
     'reject': (REDMINE_REJECTED_ID, "Rejected")
 }
 
-# instantiate Slack & Redmine clients
+"""
+    Instantiate Slack & Redmine clients
+"""
 sc = SlackClient(BOT_TOKEN)
 rc = Redmine(REDMINE_HOST, version=REDMINE_VERSION, key=REDMINE_TOKEN)
 
@@ -216,6 +222,9 @@ def create_issue(text, username, assigneduser):
     except:
         raise RuntimeError(":x: Issue creation failed")
 
+"""
+    Main
+"""
 if __name__ == "__main__":
     READ_WEBSOCKET_DELAY = 1 # 1 second delay between reading from firehose
     if sc.rtm_connect():
