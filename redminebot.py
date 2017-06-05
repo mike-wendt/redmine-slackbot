@@ -16,6 +16,7 @@ REDMINE_FEEDBACK_ID = os.environ.get('REDMINE_FEEDBACK_ID')
 REDMINE_RESOLVED_ID = os.environ.get('REDMINE_RESOLVED_ID')
 REDMINE_CLOSED_ID = os.environ.get('REDMINE_CLOSED_ID')
 REDMINE_REJECTED_ID = os.environ.get('REDMINE_REJECTED_ID')
+REDMINE_HOLD_ID = os.environ.get('REDMINE_HOLD_ID')
 REDMINE_PROJECT = os.environ.get('REDMINE_PROJECT')
 REDMINE_TRACKER_ID = os.environ.get('REDMINE_TRACKER_ID')
 BOT_ID = os.environ.get('BOT_ID')
@@ -31,7 +32,8 @@ STATUSES = {
     'feed': (REDMINE_FEEDBACK_ID, "Feedback"),
     'resolve': (REDMINE_RESOLVED_ID, "Resolved"),
     'close': (REDMINE_CLOSED_ID, "Closed"),
-    'reject': (REDMINE_REJECTED_ID, "Rejected")
+    'reject': (REDMINE_REJECTED_ID, "Rejected"),
+    'hold': (REDMINE_HOLD_ID, "Hold")
 }
 
 """
