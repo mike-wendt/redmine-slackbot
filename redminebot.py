@@ -42,6 +42,9 @@ STATUSES = {
 sc = SlackClient(BOT_TOKEN)
 rc = Redmine(REDMINE_HOST, version=REDMINE_VERSION, key=REDMINE_TOKEN)
 
+"""
+    Slack command parser
+"""
 def handle_command(command, channel, username):
     """
         Receives commands directed at the bot and determines if they
@@ -104,6 +107,9 @@ def parse_slack_output(slack_rtm_output):
                        output['channel'], username
     return None, None, None
 
+"""
+    Slack command handler functions
+"""
 def show_commands():
     """
         Return ist of commands that bot can handle
