@@ -127,13 +127,13 @@ def show_commands():
 """
     Redmine commands
 """
-def get_user(username):
+def rm_get_user(username):
     try:
         return rc.user.filter(name=username)[0]
     except:
         return RuntimeError(":x: Failed to find user `"+username+"` in Redmine")
 
-def get_issue(issueid):
+def rm_get_issue(issueid):
     try:
         return rc.issue.get(int(issueid)).id
     except:
@@ -156,8 +156,8 @@ def list_statuses():
     for i in STATUSES:
         response += "`"+i+"` - "+STATUSES[i][1]+"\n"
     return response
-    
-def impersonate_redmine(userlogin):
+
+def rm_impersonate(userlogin):
     try:
         return Redmine(REDMINE_HOST, version=REDMINE_VERSION, key=REDMINE_TOKEN, impersonate=userlogin)
     except:
@@ -170,7 +170,7 @@ def issue_subject_url(issueid, subject):
     return "<"+REDMINE_EXT_HOST+"/issues/"+str(issueid)+"|#"+str(issueid)+" "+subject+">"
 
 def list_issues(username):
-    user = get_user(username)
+    user = rm_get_user(username)
     try:
         result = rc.issue.filter(sort='project', assigned_to_id=user.id, status_id='open')
         response = ""
@@ -183,12 +183,12 @@ def list_issues(username):
         return response
     except:
         raise RuntimeError(":x: List operation failed")
-    
+        
 def update_issue(text, issue, username):
-    user = get_user(username)
-    issueid = get_issue(issue)
+    user = rm_get_user(username)
+    issueid = rm_get_issue(issue)
     # impersonate user so it looks like the update is from them
-    rcn = impersonate_redmine(user.login)
+    rcn = rm_impersonate(user.login)
     try:
         result = rcn.issue.update(issueid, notes=text)
         return ":memo: Updated Issue "+issue_url(issueid)+" with comment `"+text+"`"
@@ -196,11 +196,11 @@ def update_issue(text, issue, username):
         raise RuntimeError(":x: Issue update failed")
 
 def status_issue(text, issue, status, username):
-    user = get_user(username)
-    issueid = get_issue(issue)
+    user = rm_get_user(username)
+    issueid = rm_get_issue(issue)
     statusid, statusname = get_status(status)
     # impersonate user so it looks like the update is from them
-    rcn = impersonate_redmine(user.login)
+    rcn = rm_impersonate(user.login)
     try:
         result = rcn.issue.update(issueid, status_id=statusid, notes=text)
         return ":white_check_mark: Changed status of Issue "+issue_url(issueid)+" to `"+statusname+"` with comment `"+text+"`"
@@ -208,11 +208,11 @@ def status_issue(text, issue, status, username):
         raise RuntimeError(":x: Issue status update failed")
         
 def close_issue(text, issue, username):
-    user = get_user(username)
-    issueid = get_issue(issue)
+    user = rm_get_user(username)
+    issueid = rm_get_issue(issue)
     today = time.strftime('%Y-%m-%d')
     # impersonate user so it looks like the update is from them
-    rcn = impersonate_redmine(user.login)
+    rcn = rm_impersonate(user.login)
     try:
         result = rcn.issue.update(issueid, status_id=REDMINE_CLOSED_ID, notes=text, done_ratio=100, due_date=today)
         return ":white_check_mark: Closed Issue "+issue_url(issueid)+" with comment `"+text+"`"
@@ -220,10 +220,10 @@ def close_issue(text, issue, username):
         raise RuntimeError(":x: Issue closing failed")
 
 def create_issue(text, username, assigneduser):
-    user = get_user(username)
-    assigned = get_user(assigneduser)
+    user = rm_get_user(username)
+    assigned = rm_get_user(assigneduser)
     # impersonate user so it looks like the update is from them
-    rcn = impersonate_redmine(user.login)
+    rcn = rm_impersonate(user.login)
     try:
         issue = rcn.issue.create(project_id=REDMINE_PROJECT, subject=text, tracker_id=REDMINE_TRACKER_ID, assigned_to_id=assigned.id)
         return ":white_check_mark: Created Issue "+issue_subject_url(issue.id,issue.subject)+" assigned to "+assigned.firstname+" "+assigned.lastname
