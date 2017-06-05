@@ -100,10 +100,10 @@ def show_commands():
     """
         Return ist of commands that bot can handle
     """
-    return ":wrench: List of supported commands:\n" \
+    return ":hammer_and_wrench: *List of supported commands:*\n" \
             "`issue <subject>` - creates new issue and assigns it to you\n" \
             "`issueto <name> <subject>` - creates new issue and assigns it to `<name>`\n" \
-            "`update <issue #> <comment>` - updates an issue with the following `comment`\n" \
+            "`update <issue #> <comment>` - updates an issue with the following `<comment>`\n" \
             "`status <issue #> <status> <comment>` - changes the status of an issue\n" \
             "\t`<status>` must be one of the following: "+list_status_keys()+"\n" \
             "`close <issue #> <comment>` - closes an issue with the following comment\n" \
