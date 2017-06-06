@@ -139,92 +139,6 @@ def show_commands():
             "Record time - `!<t>h` - where `<t>` is an integer/decimal for # of hours\n" \
             "Percent done - `%<p>` - where `<p>` is an integer from 0-100\n"
 
-"""
-    Redmine commands
-"""
-def rm_get_user(username):
-    try:
-        return rc.user.filter(name=username)[0]
-    except:
-        return RuntimeError(":x: Failed to find user `"+username+"` in Redmine")
-
-def rm_get_issue(issueid):
-    try:
-        return rc.issue.get(int(issueid)).id
-    except:
-        raise RuntimeError(":x: Failed to find issue ID `"+issueid+"` in Redmine")
-
-def get_status(status):
-    try:
-        return STATUSES.get(status)[0], STATUSES.get(status)[1]
-    except:
-        raise RuntimeError(":x: Unknown status code, use one of the following:\n"+list_statuses())
-
-def list_status_keys():
-    response = ""
-    for i in STATUSES:
-        response += "`"+i+"` "
-    return response
-
-def list_statuses():
-    response = ""
-    for i in STATUSES:
-        response += "`"+i+"` - "+STATUSES[i][1]+"\n"
-    return response
-
-def rm_impersonate(userlogin):
-    try:
-        return Redmine(REDMINE_HOST, version=REDMINE_VERSION, key=REDMINE_TOKEN, impersonate=userlogin)
-    except:
-        raise RuntimeError(":x: Failed impersonate user `"+userlogin+"` in Redmine")
-
-def issue_url(issueid):
-    return "<"+REDMINE_EXT_HOST+"/issues/"+str(issueid)+"|#"+str(issueid)+">"
-
-def issue_subject_url(issueid, subject):
-    return "<"+REDMINE_EXT_HOST+"/issues/"+str(issueid)+"|#"+str(issueid)+" "+subject+">"
-
-def list_issues(username):
-    user = rm_get_user(username)
-    try:
-        result = rc.issue.filter(sort='project', assigned_to_id=user.id, status_id='open')
-        response = ""
-        if len(result) > 0:
-            response = ":book: Open issues assigned to "+user.firstname+" "+user.lastname+":\n"
-            for issue in result:
-                response += ""+issue.project.name+" "+issue_subject_url(issue.id, issue.subject)+"\n"
-        else:
-            response = ":thumbsup_all: No open issues assigned to "+user.firstname+" "+user.lastname
-        return response
-    except:
-        raise RuntimeError(":x: List operation failed")
-        
-def rm_update_issue(issue, estimate, percent, status, due, notes, record, rcn):
-    params = dict()
-    if estimate:
-        params['estimated_hours'] = estimate
-    if percent:
-        params['done_ratio'] = percent
-    if status:
-        params['status_id'] = status
-    if due:
-        params['due_date'] = due
-    if notes:
-        params['notes'] = notes
-    if record:
-        rm_record_time(issue, record, rcn)
-    
-    try:
-        result = rcn.issue.update(issue, **params)
-    except:
-        raise RuntimeError(":x: Issue update failed")
-    
-def rm_record_time(issueid, record, rcn):
-    try:
-        result = rcn.time_entry.create(issue_id=issueid, spent_on=datetime.date.today(), hours=record, activity_id=REDMINE_ACTIVITY_ID)
-    except:
-        raise RuntimeError(":x: Issue record time spent failed")
-
 def update_issue(text, issue, username):
     user = rm_get_user(username)
     issueid = rm_get_issue(issue)
@@ -275,6 +189,100 @@ def create_issue(text, username, assigneduser):
         return ":white_check_mark: Created Issue "+issue_subject_url(issue.id,issue.subject)+" assigned to "+assigned.firstname+" "+assigned.lastname
     except:
         raise RuntimeError(":x: Issue creation failed")
+            
+"""
+    Redmine functions
+"""
+def rm_get_user(username):
+    try:
+        return rc.user.filter(name=username)[0]
+    except:
+        return RuntimeError(":x: Failed to find user `"+username+"` in Redmine")
+
+def rm_get_issue(issueid):
+    try:
+        return rc.issue.get(int(issueid)).id
+    except:
+        raise RuntimeError(":x: Failed to find issue ID `"+issueid+"` in Redmine")
+
+def get_status(status):
+    try:
+        return STATUSES.get(status)[0], STATUSES.get(status)[1]
+    except:
+        raise RuntimeError(":x: Unknown status code, use one of the following:\n"+list_statuses())
+
+def rm_impersonate(userlogin):
+    try:
+        return Redmine(REDMINE_HOST, version=REDMINE_VERSION, key=REDMINE_TOKEN, impersonate=userlogin)
+    except:
+        raise RuntimeError(":x: Failed impersonate user `"+userlogin+"` in Redmine")
+        
+def rm_update_issue(issue, estimate, percent, status, due, notes, record, rcn):
+    params = dict()
+    if estimate:
+        params['estimated_hours'] = estimate
+    if percent:
+        params['done_ratio'] = percent
+    if status:
+        params['status_id'] = status
+    if due:
+        params['due_date'] = due
+    if notes:
+        params['notes'] = notes
+    if record:
+        rm_record_time(issue, record, rcn)
+    
+    try:
+        result = rcn.issue.update(issue, **params)
+    except:
+        raise RuntimeError(":x: Issue update failed")
+    
+def rm_record_time(issueid, record, rcn):
+    try:
+        result = rcn.time_entry.create(issue_id=issueid, spent_on=datetime.date.today(), hours=record, activity_id=REDMINE_ACTIVITY_ID)
+    except:
+        raise RuntimeError(":x: Issue record time spent failed")
+        
+"""
+    Status functions
+"""     
+def list_status_keys():
+    response = ""
+    for i in STATUSES:
+        response += "`"+i+"` "
+    return response
+
+def list_statuses():
+    response = ""
+    for i in STATUSES:
+        response += "`"+i+"` - "+STATUSES[i][1]+"\n"
+    return response
+
+"""
+    Response formatting functions
+"""
+def issue_url(issueid):
+    return "<"+REDMINE_EXT_HOST+"/issues/"+str(issueid)+"|#"+str(issueid)+">"
+
+def issue_subject_url(issueid, subject):
+    return "<"+REDMINE_EXT_HOST+"/issues/"+str(issueid)+"|#"+str(issueid)+" "+subject+">"
+
+def list_issues(username):
+    user = rm_get_user(username)
+    try:
+        result = rc.issue.filter(sort='project', assigned_to_id=user.id, status_id='open')
+        response = ""
+        if len(result) > 0:
+            response = ":book: Open issues assigned to "+user.firstname+" "+user.lastname+":\n"
+            for issue in result:
+                response += ""+issue.project.name+" "+issue_subject_url(issue.id, issue.subject)+"\n"
+        else:
+            response = ":thumbsup_all: No open issues assigned to "+user.firstname+" "+user.lastname
+        return response
+    except:
+        raise RuntimeError(":x: List operation failed")
+        
+
 
 """
     Keyword parsing functions
@@ -318,16 +326,6 @@ def parse_keywords(msg):
             percent = int(round(percent/10.0)*10)
         
     return estimate, record, percent
-
-"""
-    Response formatting functions
-"""
-
-
-"""
-    Status code functions
-"""
-
 
 """
     Main
