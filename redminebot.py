@@ -1,5 +1,7 @@
 import os
 import time
+import re
+import datetime
 from slackclient import SlackClient
 from redmine import Redmine
 
@@ -17,6 +19,7 @@ REDMINE_RESOLVED_ID = os.environ.get('REDMINE_RESOLVED_ID')
 REDMINE_CLOSED_ID = os.environ.get('REDMINE_CLOSED_ID')
 REDMINE_REJECTED_ID = os.environ.get('REDMINE_REJECTED_ID')
 REDMINE_HOLD_ID = os.environ.get('REDMINE_HOLD_ID')
+REDMINE_ACTIVITY_ID = os.environ.get('REDMINE_ACTIVITY_ID')
 REDMINE_PROJECT = os.environ.get('REDMINE_PROJECT')
 REDMINE_TRACKER_ID = os.environ.get('REDMINE_TRACKER_ID')
 BOT_ID = os.environ.get('BOT_ID')
@@ -35,6 +38,13 @@ STATUSES = {
     'reject': (REDMINE_REJECTED_ID, "Rejected"),
     'hold': (REDMINE_HOLD_ID, "Hold")
 }
+
+"""
+    CONSTANT regexps
+"""
+ESTIMATE_RE = re.compile(r"[$]([0-9.]+)[h]")
+RECORD_RE = re.compile(r"[!]([0-9.]+)[h]")
+PERCENT_RE = re.compile(r"[%]([0-9]{1,3})")
 
 """
     Instantiate Slack & Redmine clients
@@ -122,7 +132,12 @@ def show_commands():
             "\t`<status>` must be one of the following: "+list_status_keys()+"\n" \
             "`close <issue #> <comment>` - closes an issue with the following comment\n" \
             "`list` - list all open issues assigned to you\n" \
-            "`listfor <name>` - list all open issues assigned to `<name>`"
+            "`listfor <name>` - list all open issues assigned to `<name>`\n\n" \
+            ":key: *List of keywords:*\n" \
+            "_*NOTE:* Keywords can be used in_ `<comment>` _text only_\n" \
+            "Estimate time - `$<t>h` - where `<t>` is an integer/decimal for # of hours\n" \
+            "Record time - `!<t>h` - where `<t>` is an integer/decimal for # of hours\n" \
+            "Percent done - `%<p>` - where `<p>` is an integer from 0-100\n"
 
 """
     Redmine commands
@@ -184,13 +199,40 @@ def list_issues(username):
     except:
         raise RuntimeError(":x: List operation failed")
         
+def rm_update_issue(issue, estimate, percent, status, due, notes, record, rcn):
+    params = dict()
+    if estimate:
+        params['estimated_hours'] = estimate
+    if percent:
+        params['done_ratio'] = percent
+    if status:
+        params['status_id'] = status
+    if due:
+        params['due_date'] = due
+    if notes:
+        params['notes'] = notes
+    if record:
+        rm_record_time(issue, record, rcn)
+    
+    try:
+        result = rcn.issue.update(issue, **params)
+    except:
+        raise RuntimeError(":x: Issue update failed")
+    
+def rm_record_time(issueid, record, rcn):
+    try:
+        result = rcn.time_entry.create(issue_id=issueid, spent_on=datetime.date.today(), hours=record, activity_id=REDMINE_ACTIVITY_ID)
+    except:
+        raise RuntimeError(":x: Issue record time spent failed")
+
 def update_issue(text, issue, username):
     user = rm_get_user(username)
     issueid = rm_get_issue(issue)
     # impersonate user so it looks like the update is from them
     rcn = rm_impersonate(user.login)
     try:
-        result = rcn.issue.update(issueid, notes=text)
+        (estimate, record, percent) = parse_keywords(text)
+        rm_update_issue(issue=issueid, notes=text, rcn=rcn, estimate=estimate, record=record, percent=percent, due=None, status=None)
         return ":memo: Updated Issue "+issue_url(issueid)+" with comment `"+text+"`"
     except:
         raise RuntimeError(":x: Issue update failed")
@@ -202,7 +244,8 @@ def status_issue(text, issue, status, username):
     # impersonate user so it looks like the update is from them
     rcn = rm_impersonate(user.login)
     try:
-        result = rcn.issue.update(issueid, status_id=statusid, notes=text)
+        (estimate, record, percent) = parse_keywords(text)
+        rm_update_issue(issue=issueid, notes=text, rcn=rcn, estimate=estimate, record=record, percent=percent, status=statusid, due=None)
         return ":white_check_mark: Changed status of Issue "+issue_url(issueid)+" to `"+statusname+"` with comment `"+text+"`"
     except:
         raise RuntimeError(":x: Issue status update failed")
@@ -214,7 +257,10 @@ def close_issue(text, issue, username):
     # impersonate user so it looks like the update is from them
     rcn = rm_impersonate(user.login)
     try:
-        result = rcn.issue.update(issueid, status_id=REDMINE_CLOSED_ID, notes=text, done_ratio=100, due_date=today)
+        (estimate, record, percent) = parse_keywords(text)
+        if not percent:
+            percent = 100
+        rm_update_issue(issue=issueid, notes=text, rcn=rcn, estimate=estimate, record=record, percent=percent, status=REDMINE_CLOSED_ID, due=today)
         return ":white_check_mark: Closed Issue "+issue_url(issueid)+" with comment `"+text+"`"
     except:
         raise RuntimeError(":x: Issue closing failed")
@@ -229,6 +275,59 @@ def create_issue(text, username, assigneduser):
         return ":white_check_mark: Created Issue "+issue_subject_url(issue.id,issue.subject)+" assigned to "+assigned.firstname+" "+assigned.lastname
     except:
         raise RuntimeError(":x: Issue creation failed")
+
+"""
+    Keyword parsing functions
+"""
+def parse_keywords(msg):
+    """
+        Parse message finding keywords starting with '!', '$' followed by a number 
+        (can be decimal) followed by 'h' for hours
+        
+        '!' - record time; '$' - estimated time
+        
+        exp:
+        '$5h' - change time estimate of current issue to 5 hours
+        '!1h' - record 1 hour of time to the current issue
+        
+        Parse message finding keywords starting with '%' followed by a number 
+        0-100
+        
+        '%' - percent done
+        
+        exp:
+        '%100' - change percent done to %100
+        '%10' - change percent done to %10
+    """
+    estimate = ESTIMATE_RE.search(msg)
+    record = RECORD_RE.search(msg)
+    percent = PERCENT_RE.search(msg)
+    
+    if estimate:
+        estimate = estimate.group(1)
+    if record:
+        record = record.group(1)
+    if percent:
+        percent = int(percent.group(1))
+    
+        if percent > 100:
+            percent = 100
+        elif percent < 0:
+            percent = 0
+        else:
+            percent = int(round(percent/10.0)*10)
+        
+    return estimate, record, percent
+
+"""
+    Response formatting functions
+"""
+
+
+"""
+    Status code functions
+"""
+
 
 """
     Main
