@@ -205,12 +205,6 @@ def rm_get_issue(issueid):
     except:
         raise RuntimeError(":x: Failed to find issue ID `"+issueid+"` in Redmine")
 
-def get_status(status):
-    try:
-        return STATUSES.get(status)[0], STATUSES.get(status)[1]
-    except:
-        raise RuntimeError(":x: Unknown status code, use one of the following:\n"+list_statuses())
-
 def rm_impersonate(userlogin):
     try:
         return Redmine(REDMINE_HOST, version=REDMINE_VERSION, key=REDMINE_TOKEN, impersonate=userlogin)
@@ -246,6 +240,12 @@ def rm_record_time(issueid, record, rcn):
 """
     Status functions
 """     
+def get_status(status):
+    try:
+        return STATUSES.get(status)[0], STATUSES.get(status)[1]
+    except:
+        raise RuntimeError(":x: Unknown status code, use one of the following:\n"+list_statuses())
+        
 def list_status_keys():
     response = ""
     for i in STATUSES:
@@ -282,8 +282,6 @@ def list_issues(username):
     except:
         raise RuntimeError(":x: List operation failed")
         
-
-
 """
     Keyword parsing functions
 """
