@@ -38,6 +38,15 @@ STATUSES = {
     'reject': (REDMINE_REJECTED_ID, "Rejected"),
     'hold': (REDMINE_HOLD_ID, "Hold")
 }
+STATUS_NAME_LOOKUP = {
+    REDMINE_NEW_ID: "New",
+    REDMINE_INPROGRESS_ID: "In Progress",
+    REDMINE_FEEDBACK_ID: "Feedback",
+    REDMINE_RESOLVED_ID: "Resolved",
+    REDMINE_CLOSED_ID: "Closed",
+    REDMINE_REJECTED_ID: "Rejected",
+    REDMINE_HOLD_ID: "Hold"
+}
 # Order of issues in scrum report
 SCRUM_ORDER = [REDMINE_INPROGRESS_ID, REDMINE_FEEDBACK_ID, REDMINE_RESOLVED_ID, REDMINE_NEW_ID, REDMINE_HOLD_ID]
 
@@ -93,7 +102,12 @@ def handle_command(command, channel, username):
                 response = list_issues(username)
             elif operator == "listfor" and len(commands) > 1:
                 listuser = commands[1]
-                response = list_issues(listuser) 
+                response = list_issues(listuser)
+            elif operator == "scrum":
+                response = daily_scrum(username)
+            elif operator == "scrumfor" and len(commands) > 1:
+                listuser = commands[1]
+                response = daily_scrum(listuser)
             elif operator == "help":
                 response = show_commands()
     except RuntimeError as e:
@@ -134,7 +148,9 @@ def show_commands():
             "\t`<status>` must be one of the following: "+list_status_keys()+"\n" \
             "`close <issue #> <comment>` - closes an issue with the following comment\n" \
             "`list` - list all open issues assigned to you\n" \
-            "`listfor <name>` - list all open issues assigned to `<name>`\n\n" \
+            "`listfor <name>` - list all open issues assigned to `<name>`\n" \
+            "`scrum` - generate daily scrum for issues assigned to you\n" \
+            "`scrumfor <name>` - generate daily scrum for issues assigned to `<name>`\n\n" \
             ":key: *List of keywords:*\n" \
             "_*NOTE:* Keywords can be used in_ `<comment>` _text only_\n" \
             "Estimate time - `$<t>h` - where `<t>` is an integer/decimal for # of hours\n" \
@@ -191,7 +207,41 @@ def create_issue(text, username, assigneduser):
         return ":white_check_mark: Created Issue "+issue_subject_url(issue.id,issue.subject)+" assigned to "+assigned.firstname+" "+assigned.lastname
     except:
         raise RuntimeError(":x: Issue creation failed")
-            
+        
+def list_issues(username):
+    user = rm_get_user(username)
+    try:
+        result = rm_get_user_issues(user.id, 'open')
+        response = ""
+        if len(result) > 0:
+            response = ":book: *Open issues assigned to "+user.firstname+" "+user.lastname+":*\n"
+            for issue in result:
+                response += ""+issue.project.name+" "+issue_subject_url(issue.id, issue.subject)+"\n"
+        else:
+            response = ":thumbsup_all: No open issues assigned to "+user.firstname+" "+user.lastname
+        return response
+    except:
+        raise RuntimeError(":x: List operation failed")
+
+def daily_scrum(username):
+    user = rm_get_user(username)
+    try:
+        response = ":newspaper: *Daily Scrum report for "+user.firstname+" "+user.lastname+":*\n"
+        issues_found = False
+        for s in SCRUM_ORDER:
+            result = rm_get_user_issues(user.id, s)
+            if len(result) > 0:
+                issues_found = True
+                response += "*_"+STATUS_NAME_LOOKUP[s]+" ("+str(len(result))+")_*\n"
+                for issue in result:
+                    response += ""+issue.project.name+" "+issue_subject_url(issue.id, issue.subject)+issue_time_percent_details(issue)+"\n"
+        if not issues_found:
+            response += ":thumbsup_all: No open issues found!\n"
+        response += "\n_*Additional comments:*_"
+        return response
+    except:
+        raise RuntimeError(":x: Scrum operation failed")
+
 """
     Redmine functions
 """
@@ -206,6 +256,14 @@ def rm_get_issue(issueid):
         return rc.issue.get(int(issueid)).id
     except:
         raise RuntimeError(":x: Failed to find issue ID `"+issueid+"` in Redmine")
+        
+def rm_get_user_issues(userid, status):
+    if not status:
+        status = 'open'
+    try: 
+        return rc.issue.filter(sort='project', assigned_to_id=userid, status_id=status)
+    except:
+        return RuntimeError(":x: Failed to find issues for user `"+username+"` in Redmine")
 
 def rm_impersonate(userlogin):
     try:
@@ -239,9 +297,19 @@ def rm_record_time(issueid, record, rcn):
     except:
         raise RuntimeError(":x: Issue record time spent failed")
         
+def rm_sum_time_entries(issueid):
+    try:
+        issue = rc.issue.get(issueid)
+        total = 0.0
+        for te in issue.time_entries:
+            total += te.hours
+        return total
+    except:
+        raise RuntimeError(":x: Failed in summing time entries")
+        
 """
     Status functions
-"""     
+"""
 def get_status(status):
     try:
         return STATUSES.get(status)[0], STATUSES.get(status)[1]
@@ -269,20 +337,14 @@ def issue_url(issueid):
 def issue_subject_url(issueid, subject):
     return "<"+REDMINE_EXT_HOST+"/issues/"+str(issueid)+"|#"+str(issueid)+" "+subject+">"
 
-def list_issues(username):
-    user = rm_get_user(username)
-    try:
-        result = rc.issue.filter(sort='project', assigned_to_id=user.id, status_id='open')
-        response = ""
-        if len(result) > 0:
-            response = ":book: Open issues assigned to "+user.firstname+" "+user.lastname+":\n"
-            for issue in result:
-                response += ""+issue.project.name+" "+issue_subject_url(issue.id, issue.subject)+"\n"
-        else:
-            response = ":thumbsup_all: No open issues assigned to "+user.firstname+" "+user.lastname
-        return response
-    except:
-        raise RuntimeError(":x: List operation failed")
+def issue_time_percent_details(issue):
+    estimated = [tup for tup in issue if tup[0] == 'estimated_hours']
+    response = ""
+    if estimated:
+        spent = rm_sum_time_entries(issue.id)
+        response += " ["+str(issue.estimated_hours)+"h/"+str(spent)+"h]"
+    response += " "+str(issue.done_ratio)+"%"
+    return response
         
 """
     Keyword parsing functions
