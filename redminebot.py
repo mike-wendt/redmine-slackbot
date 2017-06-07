@@ -38,6 +38,8 @@ STATUSES = {
     'reject': (REDMINE_REJECTED_ID, "Rejected"),
     'hold': (REDMINE_HOLD_ID, "Hold")
 }
+# Order of issues in scrum report
+SCRUM_ORDER = [REDMINE_INPROGRESS_ID, REDMINE_FEEDBACK_ID, REDMINE_RESOLVED_ID, REDMINE_NEW_ID, REDMINE_HOLD_ID]
 
 """
     CONSTANT regexps
