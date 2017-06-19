@@ -83,9 +83,18 @@ def handle_command(command, channel, username):
             if operator == "issueto" and len(commands) > 2:
                 assigneduser = commands[1]
                 newmsg = s.join(commands[2:])
-                response = create_issue(newmsg, username, assigneduser)
+                response = create_issue(newmsg, username, assigneduser, REDMINE_PROJECT)
             elif operator == "issue" and len(commands) > 1:
-                response = create_issue(msg, username, username)
+                response = create_issue(msg, username, username, REDMINE_PROJECT)
+            elif operator == "issuepto" and len(commands) > 3:
+                project = commands[1]
+                assigneduser = commands[2]
+                newmsg = s.join(commands[3:])
+                response = create_issue(newmsg, username, assigneduser, project)
+            elif operator == "issuep" and len(commands) > 2:
+                project = commands[1]
+                newmsg = s.join(commands[2:])
+                response = create_issue(newmsg, username, username, project)
             elif operator == "update" and len(commands) > 2:
                 issue = commands[1]
                 newmsg = s.join(commands[2:])
@@ -149,6 +158,8 @@ def show_commands():
     return ":hammer_and_wrench: *List of supported commands:*\n" \
             "`issue <subject>` - creates new issue and assigns it to you\n" \
             "`issueto <name> <subject>` - creates new issue and assigns it to `<name>`\n" \
+            "`issuep <project> <subject>` - creates new issue in `<project>` and assigns it to you\n" \
+            "`issuepto <project> <name> <subject>` - creates new issue and assigns it to `<name>` in `<project>`\n" \
             "`update <issue #> <comment>` - updates an issue with the following `<comment>`\n" \
             "`status <issue #> <status> <comment>` - changes the status of an issue\n" \
             "\t`<status>` must be one of the following: "+list_status_keys()+"\n" \
@@ -205,14 +216,15 @@ def close_issue(text, issue, username):
     except:
         raise RuntimeError(":x: Issue closing failed")
 
-def create_issue(text, username, assigneduser):
+def create_issue(text, username, assigneduser, project):
     user = rm_get_user(username)
     assigned = rm_get_user(assigneduser)
+    project = rm_get_project(project)
     # impersonate user so it looks like the update is from them
     rcn = rm_impersonate(user.login)
     try:
         (estimate, clean_text) = parse_remove_estimate(text)
-        issue = rm_create_issue(estimate=estimate, subject=clean_text, rcn=rcn, assigned=assigned.id)
+        issue = rm_create_issue(estimate=estimate, subject=clean_text, rcn=rcn, assigned=assigned.id, project=project)
         return ":white_check_mark: Created Issue "+issue_subject_url(issue.id,issue.subject)+" assigned to "+assigned.firstname+" "+assigned.lastname
     except:
         raise RuntimeError(":x: Issue creation failed")
@@ -285,6 +297,12 @@ def rm_get_user(username):
         return rc.user.filter(name=username)[0]
     except:
         return RuntimeError(":x: Failed to find user `"+username+"` in Redmine")
+    
+def rm_get_project(project):
+    try:
+        return rc.project.get(project)
+    except:
+        return RuntimeError(":x: Failed to find project `"+project+"` in Redmine")
 
 def rm_get_issue(issueid):
     try:
@@ -314,7 +332,7 @@ def rm_impersonate(userlogin):
     except:
         raise RuntimeError(":x: Failed impersonate user `"+userlogin+"` in Redmine")
         
-def rm_create_issue(estimate, assigned, subject, rcn):
+def rm_create_issue(estimate, assigned, subject, project, rcn):
     params = dict()
     if estimate:
         params['estimated_hours'] = estimate
@@ -322,9 +340,11 @@ def rm_create_issue(estimate, assigned, subject, rcn):
         params['subject'] = subject
     if assigned:
         params['assigned_to_id'] = assigned
+    if not project:
+        project = REDMINE_PROJECT
     
     try:
-        return rcn.issue.create(project_id=REDMINE_PROJECT, tracker_id=REDMINE_TRACKER_ID, **params)
+        return rcn.issue.create(project_id=project, tracker_id=REDMINE_TRACKER_ID, **params)
     except:
         raise RuntimeError(":x: Issue creation failed")
 
