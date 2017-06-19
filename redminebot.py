@@ -245,7 +245,7 @@ def daily_scrum(username):
                 for issue in result:
                     response += ""+issue.project.name+" "+issue_subject_url(issue.id, issue.subject)+issue_time_percent_details(issue)+"\n"
         if not issues_found:
-            response += ":thumbsup_all: No open issues found!\n"
+            response += ":thumbsup_all: No issues found!\n"
         response += "\n_*Additional comments:*_"
         return response
     except:
@@ -264,8 +264,15 @@ def daily_eod(username):
                 for issue in result:
                     response += ""+issue.project.name+" "+issue_subject_url(issue.id, issue.subject)+issue_time_percent_details(issue)+"\n"
                     print 
+        for s in SCRUM_ORDER:
+            result = rm_get_user_issues(user.id, s)
+            if len(result) > 0:
+                issues_found = True
+                response += "*_"+STATUS_NAME_LOOKUP[s]+" ("+str(len(result))+")_*\n"
+                for issue in result:
+                    response += ""+issue.project.name+" "+issue_subject_url(issue.id, issue.subject)+issue_time_percent_details(issue)+"\n"
         if not issues_found:
-            response += ":thumbsup_all: No closed issues found!\n"
+            response += ":thumbsup_all: No issues found!\n"
         response += "\n_*Additional comments:*_"
         return response
     except:
