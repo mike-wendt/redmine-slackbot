@@ -222,7 +222,7 @@ def list_issues(username):
         result = rm_get_user_issues(user.id, 'open')
         response = ""
         if len(result) > 0:
-            response = ":book: *Open issues assigned to "+user.firstname+" "+user.lastname+":*\n"
+            response = ":book: *Open Issues Assigned to "+user.firstname+" "+user.lastname+":*\n"
             for issue in result:
                 response += ""+issue.project.name+" "+issue_subject_url(issue.id, issue.subject)+"\n"
         else:
@@ -234,7 +234,7 @@ def list_issues(username):
 def daily_scrum(username):
     user = rm_get_user(username)
     try:
-        response = ":newspaper: *Daily Scrum report for "+user.firstname+" "+user.lastname+":*\n"
+        response = ":newspaper: *Daily Scrum Report for "+user.firstname+" "+user.lastname+":*\n"
         issues_found = False
         for s in SCRUM_ORDER:
             result = rm_get_user_issues(user.id, s)
