@@ -160,8 +160,8 @@ def show_commands():
             "`eod` - generate end of day report for issues assigned to you\n" \
             "`eodfor <name>` - generate end of day report for issues assigned to `<name>`\n\n" \
             ":key: *List of keywords:*\n" \
-            "_*NOTE:* Keywords can be used in_ `<comment>` _text only_\n" \
             "Estimate time - `$<t>h` - where `<t>` is an integer/decimal for # of hours\n" \
+            "_*NOTE:* These keywords can be used in_ `<comment>` _text only_\n" \
             "Record time - `!<t>h` - where `<t>` is an integer/decimal for # of hours\n" \
             "Percent done - `%<p>` - where `<p>` is an integer from 0-100\n"
 
@@ -211,7 +211,8 @@ def create_issue(text, username, assigneduser):
     # impersonate user so it looks like the update is from them
     rcn = rm_impersonate(user.login)
     try:
-        issue = rcn.issue.create(project_id=REDMINE_PROJECT, subject=text, tracker_id=REDMINE_TRACKER_ID, assigned_to_id=assigned.id)
+        (estimate, clean_text) = parse_remove_estimate(text)
+        issue = rm_create_issue(estimate=estimate, subject=clean_text, rcn=rcn, assigned=assigned.id)
         return ":white_check_mark: Created Issue "+issue_subject_url(issue.id,issue.subject)+" assigned to "+assigned.firstname+" "+assigned.lastname
     except:
         raise RuntimeError(":x: Issue creation failed")
@@ -307,6 +308,20 @@ def rm_impersonate(userlogin):
     except:
         raise RuntimeError(":x: Failed impersonate user `"+userlogin+"` in Redmine")
         
+def rm_create_issue(estimate, assigned, subject, rcn):
+    params = dict()
+    if estimate:
+        params['estimated_hours'] = estimate
+    if subject:
+        params['subject'] = subject
+    if assigned:
+        params['assigned_to_id'] = assigned
+    
+    try:
+        return rcn.issue.create(project_id=REDMINE_PROJECT, tracker_id=REDMINE_TRACKER_ID, **params)
+    except:
+        raise RuntimeError(":x: Issue creation failed")
+
 def rm_update_issue(issue, estimate, percent, status, due, notes, record, rcn):
     params = dict()
     if estimate:
@@ -424,6 +439,20 @@ def parse_keywords(msg):
             percent = int(round(percent/10.0)*10)
         
     return estimate, record, percent
+
+def parse_remove_estimate(msg):
+    """
+        Parse message finding keywords starting with '$' followed by a number 
+        (can be decimal) followed by 'h' for hours for the estimated time and
+        return the time in hours as well as the text with the keyword removed
+    """
+    estimate = ESTIMATE_RE.search(msg)
+    
+    if estimate:
+        estimate = estimate.group(1)
+        msg = ESTIMATE_RE.sub('', msg)
+        
+    return estimate, msg
 
 """
     Main
