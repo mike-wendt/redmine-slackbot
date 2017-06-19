@@ -47,8 +47,9 @@ STATUS_NAME_LOOKUP = {
     REDMINE_REJECTED_ID: "Rejected",
     REDMINE_HOLD_ID: "Hold"
 }
-# Order of issues in scrum report
+# Order of issues in scrum and eod report
 SCRUM_ORDER = [REDMINE_INPROGRESS_ID, REDMINE_FEEDBACK_ID, REDMINE_RESOLVED_ID, REDMINE_NEW_ID, REDMINE_HOLD_ID]
+EOD_ORDER = [REDMINE_CLOSED_ID, REDMINE_REJECTED_ID]
 
 """
     CONSTANT regexps
@@ -108,6 +109,11 @@ def handle_command(command, channel, username):
             elif operator == "scrumfor" and len(commands) > 1:
                 listuser = commands[1]
                 response = daily_scrum(listuser)
+            elif operator == "eod":
+                response = daily_eod(username)
+            elif operator == "eodfor" and len(commands) > 1:
+                listuser = commands[1]
+                response = daily_eod(listuser)
             elif operator == "help":
                 response = show_commands()
     except RuntimeError as e:
@@ -150,7 +156,9 @@ def show_commands():
             "`list` - list all open issues assigned to you\n" \
             "`listfor <name>` - list all open issues assigned to `<name>`\n" \
             "`scrum` - generate daily scrum for issues assigned to you\n" \
-            "`scrumfor <name>` - generate daily scrum for issues assigned to `<name>`\n\n" \
+            "`scrumfor <name>` - generate daily scrum for issues assigned to `<name>`\n" \
+            "`eod` - generate end of day report for issues assigned to you\n" \
+            "`eodfor <name>` - generate end of day report for issues assigned to `<name>`\n\n" \
             ":key: *List of keywords:*\n" \
             "_*NOTE:* Keywords can be used in_ `<comment>` _text only_\n" \
             "Estimate time - `$<t>h` - where `<t>` is an integer/decimal for # of hours\n" \
@@ -242,6 +250,26 @@ def daily_scrum(username):
     except:
         raise RuntimeError(":x: Scrum operation failed")
 
+def daily_eod(username):
+    user = rm_get_user(username)
+    try:
+        response = ":newspaper: *End of Day Report for "+user.firstname+" "+user.lastname+":*\n"
+        issues_found = False
+        for s in EOD_ORDER:
+            result = rm_get_user_issues_today(user.id, s)
+            if len(result) > 0:
+                issues_found = True
+                response += "*_"+STATUS_NAME_LOOKUP[s]+" ("+str(len(result))+")_*\n"
+                for issue in result:
+                    response += ""+issue.project.name+" "+issue_subject_url(issue.id, issue.subject)+issue_time_percent_details(issue)+"\n"
+                    print 
+        if not issues_found:
+            response += ":thumbsup_all: No closed issues found!\n"
+        response += "\n_*Additional comments:*_"
+        return response
+    except:
+        raise RuntimeError(":x: EOD operation failed")
+
 """
     Redmine functions
 """
@@ -262,6 +290,14 @@ def rm_get_user_issues(userid, status):
         status = 'open'
     try: 
         return rc.issue.filter(sort='project', assigned_to_id=userid, status_id=status)
+    except:
+        return RuntimeError(":x: Failed to find issues for user `"+username+"` in Redmine")
+
+def rm_get_user_issues_today(userid, status):
+    if not status:
+        status = 'open'
+    try: 
+        return rc.issue.filter(sort='project', assigned_to_id=userid, status_id=status, updated_on=datetime.date.today())
     except:
         return RuntimeError(":x: Failed to find issues for user `"+username+"` in Redmine")
 
