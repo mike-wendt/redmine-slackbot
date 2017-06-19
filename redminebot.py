@@ -263,7 +263,6 @@ def daily_eod(username):
                 response += "*_"+STATUS_NAME_LOOKUP[s]+" ("+str(len(result))+")_*\n"
                 for issue in result:
                     response += ""+issue.project.name+" "+issue_subject_url(issue.id, issue.subject)+issue_time_percent_details(issue)+"\n"
-                    print 
         for s in SCRUM_ORDER:
             result = rm_get_user_issues(user.id, s)
             if len(result) > 0:
