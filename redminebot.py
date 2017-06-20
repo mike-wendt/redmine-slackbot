@@ -216,16 +216,16 @@ def close_issue(text, issue, username):
     except:
         raise RuntimeError(":x: Issue closing failed")
 
-def create_issue(text, username, assigneduser, project):
+def create_issue(text, username, assigneduser, project_name):
     user = rm_get_user(username)
     assigned = rm_get_user(assigneduser)
-    project = rm_get_project(project)
+    project = rm_get_project(project_name)
     # impersonate user so it looks like the update is from them
     rcn = rm_impersonate(user.login)
     try:
         (estimate, clean_text) = parse_remove_estimate(text)
         issue = rm_create_issue(estimate=estimate, subject=clean_text, rcn=rcn, assigned=assigned.id, project=project)
-        return ":white_check_mark: Created Issue "+issue_subject_url(issue.id,issue.subject)+" assigned to "+assigned.firstname+" "+assigned.lastname
+        return ":white_check_mark: Created Issue "+issue_subject_url(issue.id,issue.subject)+" in project `"+project_name+"` assigned to "+assigned.firstname+" "+assigned.lastname
     except:
         raise RuntimeError(":x: Issue creation failed")
         
