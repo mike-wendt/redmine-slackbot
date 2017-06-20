@@ -324,13 +324,13 @@ def rm_get_user(username):
     try:
         return rc.user.filter(name=username)[0]
     except:
-        return RuntimeError(":x: Failed to find user `"+username+"` in Redmine")
+        raise RuntimeError(":x: Failed to find user `"+username+"` in Redmine")
     
 def rm_get_project(project):
     try:
         return rc.project.get(project)
     except:
-        return RuntimeError(":x: Failed to find project `"+project+"` in Redmine")
+        raise RuntimeError(":x: Failed to find project `"+project+"` in Redmine")
     
 def rm_get_version(project, version):
     try:
@@ -354,7 +354,7 @@ def rm_get_user_issues(userid, status):
     try: 
         return rc.issue.filter(sort='project', assigned_to_id=userid, status_id=status)
     except:
-        return RuntimeError(":x: Failed to find issues for user `"+username+"` in Redmine")
+        raise RuntimeError(":x: Failed to find issues for user `"+username+"` in Redmine")
 
 def rm_get_user_issues_today(userid, status):
     if not status:
@@ -362,7 +362,7 @@ def rm_get_user_issues_today(userid, status):
     try: 
         return rc.issue.filter(sort='project', assigned_to_id=userid, status_id=status, updated_on=datetime.date.today())
     except:
-        return RuntimeError(":x: Failed to find issues for user `"+username+"` in Redmine")
+        raise RuntimeError(":x: Failed to find issues for user `"+username+"` in Redmine")
 
 def rm_impersonate(userlogin):
     try:
