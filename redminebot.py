@@ -95,6 +95,17 @@ def handle_command(command, channel, username):
                 project = commands[1]
                 newmsg = s.join(commands[2:])
                 response = create_issue(newmsg, username, username, project)
+            elif operator == "issuepvto" and len(commands) > 4:
+                project = commands[1]
+                version = commands[2]
+                assigneduser = commands[3]
+                newmsg = s.join(commands[4:])
+                response = create_issue_version(newmsg, username, assigneduser, project, version)
+            elif operator == "issuepv" and len(commands) > 3:
+                project = commands[1]
+                version = commands[2]
+                newmsg = s.join(commands[3:])
+                response = create_issue_version(newmsg, username, username, project, version)
             elif operator == "update" and len(commands) > 2:
                 issue = commands[1]
                 newmsg = s.join(commands[2:])
@@ -160,6 +171,8 @@ def show_commands():
             "`issueto <name> <subject>` - creates new issue and assigns it to `<name>`\n" \
             "`issuep <project> <subject>` - creates new issue in `<project>` and assigns it to you\n" \
             "`issuepto <project> <name> <subject>` - creates new issue and assigns it to `<name>` in `<project>`\n" \
+            "`issuepv <project> <version> <subject>` - creates new issue in `<project>` with version `<version>` and assigns it to you\n" \
+            "`issuepvto <project> <version> <name> <subject>` - creates new issue and assigns it to `<name>` in `<project>` with version `<version>`\n" \
             "`update <issue #> <comment>` - updates an issue with the following `<comment>`\n" \
             "`status <issue #> <status> <comment>` - changes the status of an issue\n" \
             "\t`<status>` must be one of the following: "+list_status_keys()+"\n" \
@@ -226,6 +239,21 @@ def create_issue(text, username, assigneduser, project_name):
         (estimate, clean_text) = parse_remove_estimate(text)
         issue = rm_create_issue(estimate=estimate, subject=clean_text, rcn=rcn, assigned=assigned.id, project=project)
         return ":white_check_mark: Created Issue "+issue_subject_url(issue.id,issue.subject)+" in project `"+project_name+"` assigned to "+assigned.firstname+" "+assigned.lastname
+    except:
+        raise RuntimeError(":x: Issue creation failed")
+        
+def create_issue_version(text, username, assigneduser, project_name, version_name):
+    user = rm_get_user(username)
+    assigned = rm_get_user(assigneduser)
+    project = rm_get_project(project_name)
+    version = rm_get_version(project_name, version_name)
+    # impersonate user so it looks like the update is from them
+    rcn = rm_impersonate(user.login)
+    try:
+        (estimate, clean_text) = parse_remove_estimate(text)
+        issue = rm_create_issue(estimate=estimate, subject=clean_text, rcn=rcn, assigned=assigned.id, project=project, version=version)
+        return ":white_check_mark: Created Issue "+issue_subject_url(issue.id,issue.subject)+" in project `"+project_name+"` with version `"+version_name+"` assigned to "+assigned.firstname+" "+assigned.lastname
+        return ""+str(version)
     except:
         raise RuntimeError(":x: Issue creation failed")
         
@@ -303,6 +331,16 @@ def rm_get_project(project):
         return rc.project.get(project)
     except:
         return RuntimeError(":x: Failed to find project `"+project+"` in Redmine")
+    
+def rm_get_version(project, version):
+    try:
+        proj = rm_get_project(project)
+        for v in proj.versions:
+            if v.name == version:
+                return v.id
+        raise RuntimeError(":x: Failed to find version `"+version+"` within project `"+project+"` in Redmine")
+    except:
+        raise RuntimeError(":x: Failed to find version `"+version+"` within project `"+project+"` in Redmine")
 
 def rm_get_issue(issueid):
     try:
@@ -332,7 +370,7 @@ def rm_impersonate(userlogin):
     except:
         raise RuntimeError(":x: Failed impersonate user `"+userlogin+"` in Redmine")
         
-def rm_create_issue(estimate, assigned, subject, project, rcn):
+def rm_create_issue(estimate, assigned, subject, project, version, rcn):
     params = dict()
     if estimate:
         params['estimated_hours'] = estimate
@@ -340,6 +378,8 @@ def rm_create_issue(estimate, assigned, subject, project, rcn):
         params['subject'] = subject
     if assigned:
         params['assigned_to_id'] = assigned
+    if version:
+        params['fixed_version_id'] = version
     if not project:
         project = REDMINE_PROJECT
     
