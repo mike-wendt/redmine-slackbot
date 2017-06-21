@@ -237,7 +237,7 @@ def create_issue(text, username, assigneduser, project_name):
     rcn = rm_impersonate(user.login)
     try:
         (estimate, clean_text) = parse_remove_estimate(text)
-        issue = rm_create_issue(estimate=estimate, subject=clean_text, rcn=rcn, assigned=assigned.id, project=project)
+        issue = rm_create_issue(estimate=estimate, subject=clean_text, rcn=rcn, assigned=assigned.id, project=project, version=None)
         return ":white_check_mark: Created Issue "+issue_subject_url(issue.id,issue.subject)+" in project `"+project_name+"` assigned to "+assigned.firstname+" "+assigned.lastname
     except:
         raise RuntimeError(":x: Issue creation failed")
