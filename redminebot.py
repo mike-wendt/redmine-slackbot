@@ -376,7 +376,7 @@ def rm_create_issue(estimate, assigned, subject, project, version, rcn):
     if estimate:
         params['estimated_hours'] = estimate
     if subject:
-        params['subject'] = subject
+        params['subject'] = parse_remove_http(subject)
     if assigned:
         params['assigned_to_id'] = assigned
     if version:
@@ -465,7 +465,7 @@ def issue_time_percent_details(issue):
     return response
         
 """
-    Keyword parsing functions
+    Keyword/text parsing functions
 """
 def parse_keywords(msg):
     """
@@ -520,6 +520,23 @@ def parse_remove_estimate(msg):
         msg = ESTIMATE_RE.sub('', msg)
         
     return estimate, msg
+
+def parse_remove_http(msg):
+    """
+        Strip extra HTTP formatting inserted by slack for HTTP addresses
+        
+        For subjects that we don't want a URL in title of issue
+        
+        Example:
+        "<http://google.com|google.com>" --> "google.com"
+    """
+    matches = HTTP_RE.finditer(msg)
+    
+    if matches:
+        for m in matches:
+            msg = msg.replace(m.group(1),m.group(3))
+    
+    return msg
 
 """
     Main
