@@ -400,13 +400,13 @@ def rm_update_issue(issue, estimate, percent, status, due, notes, record, rcn):
     if due:
         params['due_date'] = due
     if notes:
-        params['notes'] = notes
+        params['notes'] = parse_replace_http(notes)
     if record:
         rm_record_time(issue, record, rcn)
     
     try:
         result = rcn.issue.update(issue, **params)
-    except:
+    except:   
         raise RuntimeError(":x: Issue update failed")
     
 def rm_record_time(issueid, record, rcn):
@@ -535,6 +535,23 @@ def parse_remove_http(msg):
     if matches:
         for m in matches:
             msg = msg.replace(m.group(1),m.group(3))
+    
+    return msg
+
+def parse_replace_http(msg):
+    """
+        Strip extra HTTP formatting inserted by slack for HTTP addresses
+        
+        For comments where we want links preserved
+        
+        Example:
+        "<http://google.com|google.com>" --> "http://google.com"
+    """
+    matches = HTTP_RE.finditer(msg)
+    
+    if matches:
+        for m in matches:
+            msg = msg.replace(m.group(1),m.group(2))
     
     return msg
 
