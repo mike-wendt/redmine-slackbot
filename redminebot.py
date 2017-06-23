@@ -57,6 +57,7 @@ EOD_ORDER = [REDMINE_CLOSED_ID, REDMINE_REJECTED_ID]
 ESTIMATE_RE = re.compile(r"[$]([0-9.]+)[h]")
 RECORD_RE = re.compile(r"[!]([0-9.]+)[h]")
 PERCENT_RE = re.compile(r"[%]([0-9]{1,3})")
+HTTP_RE = re.compile(r"(\<(https?:\/\/[^\|]*)\|([^\>]*)\>)")
 
 """
     Instantiate Slack & Redmine clients
