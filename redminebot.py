@@ -137,6 +137,9 @@ def handle_command(command, channel, username):
                 response = daily_eod(listuser)
             elif operator == "help":
                 response = show_commands()
+            elif int(commands[0]) > 0:
+                issue = int(commands[0])
+                response = "Issue: "+issue_url(issue)
     except RuntimeError as e:
         response = e[0]
     message = "<@" + username + "> " + response
@@ -168,6 +171,7 @@ def show_commands():
         Return ist of commands that bot can handle
     """
     return ":hammer_and_wrench: *List of supported commands:*\n" \
+            "`<issue #>` - returns a link to the referenced issue number\n" \
             "`issue <subject>` - creates new issue and assigns it to you\n" \
             "`issueto <name> <subject>` - creates new issue and assigns it to `<name>`\n" \
             "`issuep <project> <subject>` - creates new issue in `<project>` and assigns it to you\n" \
