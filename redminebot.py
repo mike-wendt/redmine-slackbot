@@ -473,9 +473,11 @@ def issue_subject_url(issueid, subject):
 def issue_time_percent_details(issue):
     estimated = [tup for tup in issue if tup[0] == 'estimated_hours']
     response = ""
+    spent = rm_sum_time_entries(issue.id)
     if estimated:
-        spent = rm_sum_time_entries(issue.id)
         response += " ["+str(issue.estimated_hours)+"h/"+str(spent)+"h]"
+    else:
+        response += " [?/"+str(spent)+"h]"
     response += " "+str(issue.done_ratio)+"%"
     return response
         
