@@ -140,6 +140,8 @@ def handle_command(command, channel, user, username):
             elif int(commands[0]) > 0:
                 issue = int(commands[0])
                 response = "Issue: "+issue_url(issue)
+    except ValueError:
+        respone = show_commands()
     except RuntimeError as e:
         response = e[0]
     message = "<@" + user + "> " + response
