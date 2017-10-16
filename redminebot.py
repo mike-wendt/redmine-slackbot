@@ -68,7 +68,7 @@ rc = Redmine(REDMINE_HOST, version=REDMINE_VERSION, key=REDMINE_TOKEN)
 """
     Slack command parser
 """
-def handle_command(command, channel, username):
+def handle_command(command, channel, user, username):
     """
         Receives commands directed at the bot and determines if they
         are valid commands. If so, then acts on the commands. If not,
@@ -142,7 +142,7 @@ def handle_command(command, channel, username):
                 response = "Issue: "+issue_url(issue)
     except RuntimeError as e:
         response = e[0]
-    message = "<@" + username + "> " + response
+    message = "<@" + user + "> " + response
     sc.api_call("chat.postMessage", channel=channel, \
                           text=message, as_user=True)
 
@@ -156,12 +156,21 @@ def parse_slack_output(slack_rtm_output):
     if output_list and len(output_list) > 0:
         for output in output_list:
             if output and 'text' in output and AT_BOT in output['text']:
+                user = output['user']
                 profile = sc.api_call("users.info", user=output['user'])
-                username = profile['user']['name']
+                # username used for searching in redmine; try la, then first, then display
+                if profile['user']['profile']['last_name']:
+                    username = profile['user']['profile']['last_name']
+                elif profile['user']['profile']['first_name']:
+                    username = profile['user']['profile']['first_name']
+                elif profile['user']['profile']['display_name']:
+                    username = profile['user']['profile']['display_name']
+                else:
+                    username = profile['user']['name']
                 # return text after the @ mention, whitespace removed
                 return output['text'].split(AT_BOT)[1].strip(), \
-                       output['channel'], username
-    return None, None, None
+                       output['channel'], user, username
+    return None, None, None, None
 
 """
     Slack command handler functions
@@ -567,11 +576,11 @@ if __name__ == "__main__":
     if sc.rtm_connect():
         print("RedmineBot connected and running!")
         while True:
-            command, channel, username = parse_slack_output(sc.rtm_read())
-            if command and channel and username:
-                handle_command(command, channel, username)
-            elif channel and username:
-                handle_command("help", channel, username)
+            command, channel, user, username = parse_slack_output(sc.rtm_read())
+            if command and channel and user and username:
+                handle_command(command, channel, user, username)
+            elif channel and user:
+                handle_command("help", channel, user,  username)
             time.sleep(READ_WEBSOCKET_DELAY)
     else:
         print("Connection failed. Invalid Slack token or bot ID?")
