@@ -299,7 +299,8 @@ def daily_scrum(username):
                 issues_found = True
                 response += "*_"+STATUS_NAME_LOOKUP[s]+" ("+str(len(result))+")_*\n"
                 for issue in result:
-                    response += ""+issue.project.name+" "+issue_subject_url(issue.id, issue.subject)+issue_time_percent_details(issue)+"\n"
+                    tag = "" + issue_tag(issue.created_on, issue.updated_on)
+                    response += tag+" "+issue.project.name+" "+issue_subject_url(issue.id, issue.subject)+issue_time_percent_details(issue)+"\n"
         if not issues_found:
             response += ":thumbsup_all: No issues found!\n"
         response += "\n_*Additional comments:*_"
@@ -318,14 +319,16 @@ def daily_eod(username):
                 issues_found = True
                 response += "*_"+STATUS_NAME_LOOKUP[s]+" ("+str(len(result))+")_*\n"
                 for issue in result:
-                    response += ""+issue.project.name+" "+issue_subject_url(issue.id, issue.subject)+issue_time_percent_details(issue)+"\n"
+                    tag = "" + issue_tag(issue.created_on, issue.updated_on)
+                    response += tag+" "+issue.project.name+" "+issue_subject_url(issue.id, issue.subject)+issue_time_percent_details(issue)+"\n"
         for s in SCRUM_ORDER:
             result = rm_get_user_issues(user.id, s)
             if len(result) > 0:
                 issues_found = True
                 response += "*_"+STATUS_NAME_LOOKUP[s]+" ("+str(len(result))+")_*\n"
                 for issue in result:
-                    response += ""+issue.project.name+" "+issue_subject_url(issue.id, issue.subject)+issue_time_percent_details(issue)+"\n"
+                    tag = "" + issue_tag(issue.created_on, issue.updated_on)
+                    response += tag+" "+issue.project.name+" "+issue_subject_url(issue.id, issue.subject)+issue_time_percent_details(issue)+"\n"
         if not issues_found:
             response += ":thumbsup_all: No issues found!\n"
         response += "\n_*Additional comments:*_"
@@ -490,6 +493,26 @@ def issue_time_percent_details(issue):
         response += " [?/"+str(spent)+"h]"
     response += " "+str(issue.done_ratio)+"%"
     return response
+
+def issue_tag(created, updated):
+    cdate = created.date()
+    udate = updated.date()
+    today = datetime.date.today()
+
+    if cdate == today:
+        return ":zap:"
+    else:
+        if udate == today:
+            return ":sunny:"
+        elif (today - udate).days == 1:
+            return ":mostly_sunny:"
+        elif (today - udate).days == 2:
+            return ":barely_sunny:"
+        elif (today - udate).days == 3:
+            return ":cloud:"
+        elif (today - udate).days > 3 and (today - udate).days < 8:
+            return ":rain_cloud:"
+    return ":snowflake:"
         
 """
     Keyword/text parsing functions
