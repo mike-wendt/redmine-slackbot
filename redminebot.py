@@ -502,7 +502,7 @@ def issue_tag(created, updated):
     if cdate == today:
         return ":zap:"
     else:
-        if udate == today:
+        if (today - udate).days == 0:
             return ":sunny:"
         elif (today - udate).days == 1:
             return ":mostly_sunny:"
@@ -512,7 +512,9 @@ def issue_tag(created, updated):
             return ":cloud:"
         elif (today - udate).days > 3 and (today - udate).days < 8:
             return ":rain_cloud:"
-    return ":snowflake:"
+        elif (today - udate).days >= 8:
+            return ":snowflake:"
+    return ":grey_question:"
 
 """
     Time conversion helper function
