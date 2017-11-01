@@ -1,7 +1,7 @@
 import os
 import time
 import re
-import datetime
+from datetime import datetime
 from slackclient import SlackClient
 from redmine import Redmine
 
@@ -495,9 +495,9 @@ def issue_time_percent_details(issue):
     return response
 
 def issue_tag(created, updated):
-    cdate = created.date()
-    udate = updated.date()
-    today = datetime.date.today()
+    cdate = utc2local(created).date()
+    udate = utc2local(updated).date()
+    today = datetime.today().date()
 
     if cdate == today:
         return ":zap:"
@@ -513,7 +513,15 @@ def issue_tag(created, updated):
         elif (today - udate).days > 3 and (today - udate).days < 8:
             return ":rain_cloud:"
     return ":snowflake:"
-        
+
+"""
+    Time conversion helper function
+"""
+def utc2local(utc):
+    epoch = time.mktime(utc.timetuple())
+    offset = datetime.fromtimestamp (epoch) - datetime.utcfromtimestamp (epoch)
+    return utc + offset
+
 """
     Keyword/text parsing functions
 """
