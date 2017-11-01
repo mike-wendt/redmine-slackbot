@@ -379,7 +379,7 @@ def rm_get_user_issues_today(userid, status):
     if not status:
         status = 'open'
     try: 
-        return rc.issue.filter(sort='project', assigned_to_id=userid, status_id=status, updated_on=datetime.date.today())
+        return rc.issue.filter(sort='project', assigned_to_id=userid, status_id=status, updated_on=datetime.today().date())
     except:
         raise RuntimeError(":x: Failed to find issues for user `"+username+"` in Redmine")
 
@@ -429,7 +429,7 @@ def rm_update_issue(issue, estimate, percent, status, due, notes, record, rcn):
     
 def rm_record_time(issueid, record, rcn):
     try:
-        result = rcn.time_entry.create(issue_id=issueid, spent_on=datetime.date.today(), hours=record, activity_id=REDMINE_ACTIVITY_ID)
+        result = rcn.time_entry.create(issue_id=issueid, spent_on=datetime.today().date(), hours=record, activity_id=REDMINE_ACTIVITY_ID)
     except:
         raise RuntimeError(":x: Issue record time spent failed")
         
