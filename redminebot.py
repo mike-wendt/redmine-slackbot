@@ -380,7 +380,7 @@ def rm_get_user_issues_today(userid, status):
     if not status:
         status = 'open'
     try:
-        today = local2utc(datetime.today()).date()
+        today = datetime.today().date()
         return rc.issue.filter(sort='project', assigned_to_id=userid, status_id=status, updated_on=today)
     except:
         raise RuntimeError(":x: Failed to find issues for user `"+username+"` in Redmine")
