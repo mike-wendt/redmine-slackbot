@@ -228,12 +228,13 @@ def status_issue(text, issue, status, username):
         rm_update_issue(issue=issueid, notes=text, rcn=rcn, estimate=estimate, record=record, percent=percent, status=statusid, due=None)
         return ":white_check_mark: Changed status of Issue "+issue_url(issueid)+" to `"+statusname+"` with comment `"+text+"`"
     except:
-        raise RuntimeError(":x: Issue status update failed")
+        tb = traceback.format_exc()
+        raise RuntimeError(":x: Issue status update failed - " + tb)
         
 def close_issue(text, issue, username):
     user = rm_get_user(username)
     issueid = rm_get_issue(issue)
-    today = time.strftime('%Y-%m-%d')
+    today = local2utc(datetime.today()).date()
     # impersonate user so it looks like the update is from them
     rcn = rm_impersonate(user.login)
     try:
@@ -378,8 +379,9 @@ def rm_get_user_issues(userid, status):
 def rm_get_user_issues_today(userid, status):
     if not status:
         status = 'open'
-    try: 
-        return rc.issue.filter(sort='project', assigned_to_id=userid, status_id=status, updated_on=datetime.today().date())
+    try:
+        today = local2utc(datetime.today()).date()
+        return rc.issue.filter(sort='project', assigned_to_id=userid, status_id=status, updated_on=today)
     except:
         raise RuntimeError(":x: Failed to find issues for user `"+username+"` in Redmine")
 
@@ -429,7 +431,8 @@ def rm_update_issue(issue, estimate, percent, status, due, notes, record, rcn):
     
 def rm_record_time(issueid, record, rcn):
     try:
-        result = rcn.time_entry.create(issue_id=issueid, spent_on=datetime.today().date(), hours=record, activity_id=REDMINE_ACTIVITY_ID)
+        today = local2utc(datetime.today()).date()
+        result = rcn.time_entry.create(issue_id=issueid, spent_on=today, hours=record, activity_id=REDMINE_ACTIVITY_ID)
     except:
         raise RuntimeError(":x: Issue record time spent failed")
         
@@ -517,12 +520,17 @@ def issue_tag(created, updated):
     return ":grey_question:"
 
 """
-    Time conversion helper function
+    Time conversion helper functions
 """
 def utc2local(utc):
     epoch = time.mktime(utc.timetuple())
     offset = datetime.fromtimestamp (epoch) - datetime.utcfromtimestamp (epoch)
     return utc + offset
+
+def local2utc(local):
+    epoch = time.mktime(local.timetuple())
+    offset = datetime.fromtimestamp (epoch) - datetime.utcfromtimestamp (epoch)
+    return local - offset
 
 """
     Keyword/text parsing functions
