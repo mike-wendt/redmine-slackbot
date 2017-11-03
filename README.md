@@ -87,8 +87,11 @@ command=/opt/redminebot/run.sh    ; the program (relative uses PATH, can take ar
 numprocs=1                        ; number of processes copies to start (def 1)
 directory=/opt/redminebot         ; directory to cwd to before exec (def no cwd)
 autostart=true                    ; start at supervisord start (default: true)
+autorestart=true                  ; restart on exit
 stopasgroup=true                  ; send stop signal to the UNIX process group (default false)
 user=redminebot                   ; setuid to this UNIX account to run the program
+stderr_logfile=/var/log/redminebot.err.log
+stdout_logfile=/var/log/redminebot.out.log
 ```
 
 ## Source
