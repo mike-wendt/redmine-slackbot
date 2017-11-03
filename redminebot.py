@@ -239,7 +239,7 @@ def status_issue(text, issue, status, username):
     except:
         traceback.print_exc(file=sys.stderr)
         raise RuntimeError(":x: Issue status update failed")
-        
+
 def close_issue(text, issue, username):
     user = rm_get_user(username)
     issueid = rm_get_issue(issue)
@@ -269,7 +269,7 @@ def create_issue(text, username, assigneduser, project_name):
     except:
         traceback.print_exc(file=sys.stderr)
         raise RuntimeError(":x: Issue creation failed")
-        
+
 def create_issue_version(text, username, assigneduser, project_name, version_name):
     user = rm_get_user(username)
     assigned = rm_get_user(assigneduser)
@@ -285,7 +285,7 @@ def create_issue_version(text, username, assigneduser, project_name, version_nam
     except:
         traceback.print_exc(file=sys.stderr)
         raise RuntimeError(":x: Issue creation failed")
-        
+
 def list_issues(username):
     user = rm_get_user(username)
     try:
@@ -395,14 +395,14 @@ def rm_get_user(username):
     except:
         traceback.print_exc(file=sys.stderr)
         raise RuntimeError(":x: Failed to find user `"+username+"` in Redmine")
-    
+
 def rm_get_project(project):
     try:
         return rc.project.get(project)
     except:
         traceback.print_exc(file=sys.stderr)
         raise RuntimeError(":x: Failed to find project `"+project+"` in Redmine")
-    
+
 def rm_get_version(project, version):
     try:
         proj = rm_get_project(project)
@@ -420,11 +420,11 @@ def rm_get_issue(issueid):
     except:
         traceback.print_exc(file=sys.stderr)
         raise RuntimeError(":x: Failed to find issue ID `"+issueid+"` in Redmine")
-        
+
 def rm_get_user_issues(userid, status):
     if not status:
         status = 'open'
-    try: 
+    try:
         return rc.issue.filter(sort='project', assigned_to_id=userid, status_id=status)
     except:
         traceback.print_exc(file=sys.stderr)
@@ -460,7 +460,7 @@ def rm_impersonate(userlogin):
     except:
         traceback.print_exc(file=sys.stderr)
         raise RuntimeError(":x: Failed impersonate user `"+userlogin+"` in Redmine")
-        
+
 def rm_create_issue(estimate, assigned, subject, project, version, rcn):
     params = dict()
     if estimate:
@@ -473,7 +473,7 @@ def rm_create_issue(estimate, assigned, subject, project, version, rcn):
         params['fixed_version_id'] = version
     if not project:
         project = REDMINE_PROJECT
-    
+
     try:
         return rcn.issue.create(project_id=project, tracker_id=REDMINE_TRACKER_ID, **params)
     except:
@@ -494,13 +494,13 @@ def rm_update_issue(issue, estimate, percent, status, due, notes, record, rcn):
         params['notes'] = parse_replace_http(notes)
     if record:
         rm_record_time(issue, record, rcn)
-    
+
     try:
         result = rcn.issue.update(issue, **params)
     except:
         traceback.print_exc(file=sys.stderr)
         raise RuntimeError(":x: Issue update failed")
-    
+
 def rm_record_time(issueid, record, rcn):
     try:
         today = local2utc(datetime.today()).date()
@@ -508,7 +508,7 @@ def rm_record_time(issueid, record, rcn):
     except:
         traceback.print_exc(file=sys.stderr)
         raise RuntimeError(":x: Issue record time spent failed")
-        
+
 def rm_sum_time_entries(issueid):
     try:
         issue = rc.issue.get(issueid)
@@ -519,7 +519,7 @@ def rm_sum_time_entries(issueid):
     except:
         traceback.print_exc(file=sys.stderr)
         raise RuntimeError(":x: Failed in summing time entries")
-        
+
 """
     Status functions
 """
@@ -528,7 +528,7 @@ def get_status(status):
         return STATUSES.get(status)[0], STATUSES.get(status)[1]
     except:
         raise RuntimeError(":x: Unknown status code, use one of the following:\n"+list_statuses())
-        
+
 def list_status_keys():
     response = ""
     for i in STATUSES:
@@ -611,20 +611,20 @@ def local2utc(local):
 """
 def parse_keywords(msg):
     """
-        Parse message finding keywords starting with '!', '$' followed by a number 
+        Parse message finding keywords starting with '!', '$' followed by a number
         (can be decimal) followed by 'h' for hours
-        
+
         '!' - record time; '$' - estimated time
-        
+
         exp:
         '$5h' - change time estimate of current issue to 5 hours
         '!1h' - record 1 hour of time to the current issue
-        
-        Parse message finding keywords starting with '%' followed by a number 
+
+        Parse message finding keywords starting with '%' followed by a number
         0-100
-        
+
         '%' - percent done
-        
+
         exp:
         '%100' - change percent done to %100
         '%10' - change percent done to %10
@@ -632,69 +632,69 @@ def parse_keywords(msg):
     estimate = ESTIMATE_RE.search(msg)
     record = RECORD_RE.search(msg)
     percent = PERCENT_RE.search(msg)
-    
+
     if estimate:
         estimate = estimate.group(1)
     if record:
         record = record.group(1)
     if percent:
         percent = int(percent.group(1))
-    
+
         if percent > 100:
             percent = 100
         elif percent < 0:
             percent = 0
         else:
             percent = int(round(percent/10.0)*10)
-        
+
     return estimate, record, percent
 
 def parse_remove_estimate(msg):
     """
-        Parse message finding keywords starting with '$' followed by a number 
+        Parse message finding keywords starting with '$' followed by a number
         (can be decimal) followed by 'h' for hours for the estimated time and
         return the time in hours as well as the text with the keyword removed
     """
     estimate = ESTIMATE_RE.search(msg)
-    
+
     if estimate:
         estimate = estimate.group(1)
         msg = ESTIMATE_RE.sub('', msg)
-        
+
     return estimate, msg
 
 def parse_remove_http(msg):
     """
         Strip extra HTTP formatting inserted by slack for HTTP addresses
-        
+
         For subjects that we don't want a URL in title of issue
-        
+
         Example:
         "<http://google.com|google.com>" --> "google.com"
     """
     matches = HTTP_RE.finditer(msg)
-    
+
     if matches:
         for m in matches:
             msg = msg.replace(m.group(1),m.group(3))
-    
+
     return msg
 
 def parse_replace_http(msg):
     """
         Strip extra HTTP formatting inserted by slack for HTTP addresses
-        
+
         For comments where we want links preserved
-        
+
         Example:
         "<http://google.com|google.com>" --> "http://google.com"
     """
     matches = HTTP_RE.finditer(msg)
-    
+
     if matches:
         for m in matches:
             msg = msg.replace(m.group(1),m.group(2))
-    
+
     return msg
 
 """
