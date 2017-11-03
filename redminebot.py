@@ -1,6 +1,8 @@
 import os
 import time
 import re
+import sys
+import traceback
 from datetime import datetime
 from slackclient import SlackClient
 from redminelib import Redmine
@@ -215,6 +217,7 @@ def update_issue(text, issue, username):
         rm_update_issue(issue=issueid, notes=text, rcn=rcn, estimate=estimate, record=record, percent=percent, due=None, status=None)
         return ":memo: Updated Issue "+issue_url(issueid)+" with comment `"+text+"`"
     except:
+        traceback.print_exc(file=stderr)
         raise RuntimeError(":x: Issue update failed")
 
 def status_issue(text, issue, status, username):
@@ -228,8 +231,8 @@ def status_issue(text, issue, status, username):
         rm_update_issue(issue=issueid, notes=text, rcn=rcn, estimate=estimate, record=record, percent=percent, status=statusid, due=None)
         return ":white_check_mark: Changed status of Issue "+issue_url(issueid)+" to `"+statusname+"` with comment `"+text+"`"
     except:
-        tb = traceback.format_exc()
-        raise RuntimeError(":x: Issue status update failed - " + tb)
+        traceback.print_exc(file=stderr)
+        raise RuntimeError(":x: Issue status update failed")
         
 def close_issue(text, issue, username):
     user = rm_get_user(username)
@@ -244,6 +247,7 @@ def close_issue(text, issue, username):
         rm_update_issue(issue=issueid, notes=text, rcn=rcn, estimate=estimate, record=record, percent=percent, status=REDMINE_CLOSED_ID, due=today)
         return ":white_check_mark: Closed Issue "+issue_url(issueid)+" with comment `"+text+"`"
     except:
+        traceback.print_exc(file=stderr)
         raise RuntimeError(":x: Issue closing failed")
 
 def create_issue(text, username, assigneduser, project_name):
@@ -257,6 +261,7 @@ def create_issue(text, username, assigneduser, project_name):
         issue = rm_create_issue(estimate=estimate, subject=clean_text, rcn=rcn, assigned=assigned.id, project=project, version=None)
         return ":white_check_mark: Created Issue "+issue_subject_url(issue.id,issue.subject)+" in project `"+project_name+"` assigned to "+assigned.firstname+" "+assigned.lastname
     except:
+        traceback.print_exc(file=stderr)
         raise RuntimeError(":x: Issue creation failed")
         
 def create_issue_version(text, username, assigneduser, project_name, version_name):
@@ -272,6 +277,7 @@ def create_issue_version(text, username, assigneduser, project_name, version_nam
         return ":white_check_mark: Created Issue "+issue_subject_url(issue.id,issue.subject)+" in project `"+project_name+"` with version `"+version_name+"` assigned to "+assigned.firstname+" "+assigned.lastname
         return ""+str(version)
     except:
+        traceback.print_exc(file=stderr)
         raise RuntimeError(":x: Issue creation failed")
         
 def list_issues(username):
@@ -287,6 +293,7 @@ def list_issues(username):
             response = ":thumbsup_all: No open issues assigned to "+user.firstname+" "+user.lastname
         return response
     except:
+        traceback.print_exc(file=stderr)
         raise RuntimeError(":x: List operation failed")
 
 def daily_scrum(username):
@@ -307,6 +314,7 @@ def daily_scrum(username):
         response += "\n_*Additional comments:*_"
         return response
     except:
+        traceback.print_exc(file=stderr)
         raise RuntimeError(":x: Scrum operation failed")
 
 def daily_eod(username):
@@ -335,6 +343,7 @@ def daily_eod(username):
         response += "\n_*Additional comments:*_"
         return response
     except:
+        traceback.print_exc(file=stderr)
         raise RuntimeError(":x: EOD operation failed")
 
 """
@@ -344,12 +353,14 @@ def rm_get_user(username):
     try:
         return rc.user.filter(name=username)[0]
     except:
+        traceback.print_exc(file=stderr)
         raise RuntimeError(":x: Failed to find user `"+username+"` in Redmine")
     
 def rm_get_project(project):
     try:
         return rc.project.get(project)
     except:
+        traceback.print_exc(file=stderr)
         raise RuntimeError(":x: Failed to find project `"+project+"` in Redmine")
     
 def rm_get_version(project, version):
@@ -360,12 +371,14 @@ def rm_get_version(project, version):
                 return v.id
         raise RuntimeError(":x: Failed to find version `"+version+"` within project `"+project+"` in Redmine")
     except:
+        traceback.print_exc(file=stderr)
         raise RuntimeError(":x: Failed to find version `"+version+"` within project `"+project+"` in Redmine")
 
 def rm_get_issue(issueid):
     try:
         return rc.issue.get(int(issueid)).id
     except:
+        traceback.print_exc(file=stderr)
         raise RuntimeError(":x: Failed to find issue ID `"+issueid+"` in Redmine")
         
 def rm_get_user_issues(userid, status):
@@ -374,6 +387,7 @@ def rm_get_user_issues(userid, status):
     try: 
         return rc.issue.filter(sort='project', assigned_to_id=userid, status_id=status)
     except:
+        traceback.print_exc(file=stderr)
         raise RuntimeError(":x: Failed to find issues for user `"+username+"` in Redmine")
 
 def rm_get_user_issues_today(userid, status):
@@ -383,12 +397,14 @@ def rm_get_user_issues_today(userid, status):
         today = datetime.today().date()
         return rc.issue.filter(sort='project', assigned_to_id=userid, status_id=status, updated_on=today)
     except:
+        traceback.print_exc(file=stderr)
         raise RuntimeError(":x: Failed to find issues for user `"+username+"` in Redmine")
 
 def rm_impersonate(userlogin):
     try:
         return Redmine(REDMINE_HOST, version=REDMINE_VERSION, key=REDMINE_TOKEN, impersonate=userlogin)
     except:
+        traceback.print_exc(file=stderr)
         raise RuntimeError(":x: Failed impersonate user `"+userlogin+"` in Redmine")
         
 def rm_create_issue(estimate, assigned, subject, project, version, rcn):
@@ -407,6 +423,7 @@ def rm_create_issue(estimate, assigned, subject, project, version, rcn):
     try:
         return rcn.issue.create(project_id=project, tracker_id=REDMINE_TRACKER_ID, **params)
     except:
+        traceback.print_exc(file=stderr)
         raise RuntimeError(":x: Issue creation failed")
 
 def rm_update_issue(issue, estimate, percent, status, due, notes, record, rcn):
@@ -426,7 +443,8 @@ def rm_update_issue(issue, estimate, percent, status, due, notes, record, rcn):
     
     try:
         result = rcn.issue.update(issue, **params)
-    except:   
+    except:
+        traceback.print_exc(file=stderr)
         raise RuntimeError(":x: Issue update failed")
     
 def rm_record_time(issueid, record, rcn):
@@ -434,6 +452,7 @@ def rm_record_time(issueid, record, rcn):
         today = local2utc(datetime.today()).date()
         result = rcn.time_entry.create(issue_id=issueid, spent_on=today, hours=record, activity_id=REDMINE_ACTIVITY_ID)
     except:
+        traceback.print_exc(file=stderr)
         raise RuntimeError(":x: Issue record time spent failed")
         
 def rm_sum_time_entries(issueid):
@@ -444,6 +463,7 @@ def rm_sum_time_entries(issueid):
             total += te.hours
         return total
     except:
+        traceback.print_exc(file=stderr)
         raise RuntimeError(":x: Failed in summing time entries")
         
 """
