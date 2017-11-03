@@ -3,7 +3,7 @@ import time
 import re
 from datetime import datetime
 from slackclient import SlackClient
-from redmine import Redmine
+from redminelib import Redmine
 
 """
     Load environment variables
