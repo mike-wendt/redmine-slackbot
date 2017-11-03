@@ -124,6 +124,10 @@ def handle_command(command, channel, user, username):
                 response = close_issue(newmsg, issue, username)
             elif operator == "list":
                 response = list_issues(username)
+            elif operator == "listall":
+                response = list_all_issues()
+            elif operator == "listun":
+                response = list_unassigned_issues()
             elif operator == "listfor" and len(commands) > 1:
                 listuser = commands[1]
                 response = list_issues(listuser)
@@ -197,6 +201,8 @@ def show_commands():
             "`close <issue #> <comment>` - closes an issue with the following comment\n" \
             "`list` - list all open issues assigned to you\n" \
             "`listfor <name>` - list all open issues assigned to `<name>`\n" \
+            "`listall` - list all open issues\n" \
+            "`listun` - list all open and unassigned issues\n" \
             "`scrum` - generate daily scrum for issues assigned to you\n" \
             "`scrumfor <name>` - generate daily scrum for issues assigned to `<name>`\n" \
             "`eod` - generate end of day report for issues assigned to you\n" \
@@ -295,6 +301,40 @@ def list_issues(username):
     except:
         traceback.print_exc(file=sys.stderr)
         raise RuntimeError(":x: List operation failed")
+
+def list_all_issues():
+    try:
+        result = rm_get_all_issues('open',False)
+        response = ""
+        if len(result) > 0:
+            response = ":book: *All Open Issues:*\n"
+            for issue in result:
+                assigned = [tup for tup in issue if tup[0] == 'assigned_to']
+                username = ""
+                if assigned:
+                    username += " :bookmark: "+issue.assigned_to.name
+                response += ""+issue.project.name+" "+issue_subject_url(issue.id, issue.subject)+username+"\n"
+        else:
+            response = ":thumbsup_all: No open issues found"
+        return response
+    except:
+        traceback.print_exc(file=sys.stderr)
+        raise RuntimeError(":x: List all operation failed")
+
+def list_unassigned_issues():
+    try:
+        result = rm_get_all_issues('open',True)
+        response = ""
+        if len(result) > 0:
+            response = ":book: *All Open and Unassigned Issues:*\n"
+            for issue in result:
+                response += ""+issue.project.name+" "+issue_subject_url(issue.id, issue.subject)+"\n"
+        else:
+            response = ":thumbsup_all: No open and unassigned issues found"
+        return response
+    except:
+        traceback.print_exc(file=sys.stderr)
+        raise RuntimeError(":x: List unassigned operation failed")
 
 def daily_scrum(username):
     user = rm_get_user(username)
@@ -396,6 +436,20 @@ def rm_get_user_issues_today(userid, status):
     try:
         today = datetime.today().date()
         return rc.issue.filter(sort='project', assigned_to_id=userid, status_id=status, updated_on=today)
+    except:
+        traceback.print_exc(file=sys.stderr)
+        raise RuntimeError(":x: Failed to find issues for user `"+username+"` in Redmine")
+
+def rm_get_all_issues(status, unassigned):
+    if not status:
+        status = 'open'
+    if not unassigned:
+        unassigned = False
+    try:
+        if unassigned:
+            return rc.issue.filter(sort='project', assigned_to_id='!*', status_id=status)
+        else:
+            return rc.issue.filter(sort='project', status_id=status)
     except:
         traceback.print_exc(file=sys.stderr)
         raise RuntimeError(":x: Failed to find issues for user `"+username+"` in Redmine")
