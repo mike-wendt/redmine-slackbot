@@ -259,7 +259,7 @@ def close_issue(text, issue, username):
 def create_issue(text, username, assigneduser, project_name):
     user = rm_get_user(username)
     assigned = rm_get_user(assigneduser)
-    project = rm_get_project(project_name)
+    project = rm_get_project(project_name).identifier
     # impersonate user so it looks like the update is from them
     rcn = rm_impersonate(user.login)
     try:
@@ -273,7 +273,7 @@ def create_issue(text, username, assigneduser, project_name):
 def create_issue_version(text, username, assigneduser, project_name, version_name):
     user = rm_get_user(username)
     assigned = rm_get_user(assigneduser)
-    project = rm_get_project(project_name)
+    project = rm_get_project(project_name).identifier
     version = rm_get_version(project_name, version_name)
     # impersonate user so it looks like the update is from them
     rcn = rm_impersonate(user.login)
