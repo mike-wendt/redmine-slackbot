@@ -309,7 +309,7 @@ def list_all_issues():
         if len(result) > 0:
             response = ":book: *All Open Issues:*\n"
             for issue in result:
-                assigned = [tup for tup in issue if tup[0] == 'assigned_to']
+                assigned = check_key_exists(issue, 'assigned_to')
                 username = ""
                 if assigned:
                     username += " :bookmark: "+issue.assigned_to.name
@@ -551,9 +551,9 @@ def issue_subject_url(issueid, subject):
     return "<"+REDMINE_EXT_HOST+"/issues/"+str(issueid)+"|#"+str(issueid)+" "+subject+">"
 
 def issue_time_percent_details(issue):
-    estimated = [tup for tup in issue if tup[0] == 'estimated_hours']
-    start = [tup for tup in issue if tup[0] == 'start_date']
-    due = [tup for tup in issue if tup[0] == 'due_date']
+    estimated = check_key_exists(issue, 'estimated_hours')
+    start = check_key_exists(issue, 'start_date')
+    due = check_key_exists(issue, 'due_date')
     response = ""
     spent = rm_sum_time_entries(issue.id)
     if start:
@@ -696,6 +696,12 @@ def parse_replace_http(msg):
             msg = msg.replace(m.group(1),m.group(2))
 
     return msg
+
+"""
+    Helper functions
+"""
+def check_key_exists(target, key):
+    return [tup for tup in target if tup[0] == key]
 
 """
     Main
