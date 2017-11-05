@@ -165,20 +165,32 @@ def parse_slack_output(slack_rtm_output):
     if output_list and len(output_list) > 0:
         for output in output_list:
             if output and 'text' in output and AT_BOT in output['text']:
-                user = output['user']
-                profile = sc.api_call("users.info", user=output['user'])
-                # username used for searching in redmine; try la, then first, then display
-                if profile['user']['profile']['last_name']:
-                    username = profile['user']['profile']['last_name']
-                elif profile['user']['profile']['first_name']:
-                    username = profile['user']['profile']['first_name']
-                elif profile['user']['profile']['display_name']:
-                    username = profile['user']['profile']['display_name']
-                else:
-                    username = profile['user']['name']
-                # return text after the @ mention, whitespace removed
-                return output['text'].split(AT_BOT)[1].strip(), \
-                       output['channel'], user, username
+                try:
+                    user = output['user']
+                    profile = sc.api_call("users.info", user=output['user'])
+                    # username used for searching in redmine; try last,
+                    # then first, then display
+                    last = check_key_exists(profile['user']['profile'] \
+                                               ,'last_name')
+                    first = check_key_exists(profile['user']['profile'] \
+                                               ,'first_name')
+                    display = check_key_exists(profile['user']['profile'] \
+                                               ,'display_name')
+                    if last and profile['user']['profile']['last_name']:
+                        username = profile['user']['profile']['last_name']
+                    elif first and profile['user']['profile']['first_name']:
+                        username = profile['user']['profile']['first_name']
+                    elif display and profile['user']['profile']['display_name']:
+                        username = profile['user']['profile']['display_name']
+                    else:
+                        username = profile['user']['name']
+                    # return text after the @ mention, whitespace removed
+                    return output['text'].split(AT_BOT)[1].strip(), \
+                           output['channel'], user, username
+                except:
+                    traceback.print_exc(file=sys.stderr)
+                    raise RuntimeError(":x: Unable to find `"+user \
+                                       +"` in Redmine")
     return None, None, None, None
 
 """
