@@ -292,8 +292,8 @@ def create_issue_version(text, username, assigneduser, project_name, version_nam
     rcn = rm_impersonate(user.login)
     try:
         (estimate, clean_text) = parse_remove_estimate(text)
-        issue = rm_create_issue(estimate=estimate, subject=clean_text, rcn=rcn, assigned=assigned.id, project=project.identifier, version=version)
-        return ":white_check_mark: Created Issue "+issue_subject_url(issue.id,issue.subject)+" in project `"+project.name+"` with version `"+version_name+"` assigned to "+assigned.firstname+" "+assigned.lastname
+        issue = rm_create_issue(estimate=estimate, subject=clean_text, rcn=rcn, assigned=assigned.id, project=project.identifier, version=version.id)
+        return ":white_check_mark: Created Issue "+issue_subject_url(issue.id,issue.subject)+" in project `"+project.name+"` with version `"+version.name+"` assigned to "+assigned.firstname+" "+assigned.lastname
         return ""+str(version)
     except:
         traceback.print_exc(file=sys.stderr)
@@ -420,8 +420,8 @@ def rm_get_version(project, version):
     try:
         proj = rm_get_project(project)
         for v in proj.versions:
-            if v.name == version:
-                return v.id
+            if v.name.lower() == version.lower():
+                return v
         raise RuntimeError(":x: Failed to find version `"+version+"` within project `"+project+"` in Redmine")
     except:
         traceback.print_exc(file=sys.stderr)
