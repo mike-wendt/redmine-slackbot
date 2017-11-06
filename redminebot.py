@@ -170,17 +170,11 @@ def parse_slack_output(slack_rtm_output):
                     profile = sc.api_call("users.info", user=output['user'])
                     # username used for searching in redmine; try last,
                     # then first, then display
-                    last = check_key_exists(profile['user']['profile'] \
-                                               ,'last_name')
-                    first = check_key_exists(profile['user']['profile'] \
-                                               ,'first_name')
-                    display = check_key_exists(profile['user']['profile'] \
-                                               ,'display_name')
-                    if last and profile['user']['profile']['last_name']:
+                    if 'last_name' in profile['user']['profile']:
                         username = profile['user']['profile']['last_name']
-                    elif first and profile['user']['profile']['first_name']:
+                    elif 'first_name' in profile['user']['profile']:
                         username = profile['user']['profile']['first_name']
-                    elif display and profile['user']['profile']['display_name']:
+                    elif 'display_name' in profile['user']['profile']:
                         username = profile['user']['profile']['display_name']
                     else:
                         username = profile['user']['name']
