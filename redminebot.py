@@ -722,9 +722,9 @@ if __name__ == "__main__":
         print("RedmineBot connected and running!")
         while True:
             command, channel, user, username = parse_slack_output(sc.rtm_read())
-            if command and channel and user and username:
+            if command and channel and user != BOT_ID and username:
                 handle_command(command, channel, user, username)
-            elif channel and user:
+            elif channel and user != BOT_ID:
                 handle_command("help", channel, user,  username)
             time.sleep(READ_WEBSOCKET_DELAY)
     else:
