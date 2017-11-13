@@ -356,7 +356,6 @@ def daily_scrum(username):
                     response += issue_detail(issue, extended=True, user=False)
         if not issues_found:
             response += ":thumbsup_all: No issues found!\n"
-        response += "\n_*Additional comments:*_"
         return response
     except:
         traceback.print_exc(file=sys.stderr)
@@ -382,7 +381,6 @@ def daily_eod(username):
                     response += issue_detail(issue, extended=True, user=False)
         if not issues_found:
             response += ":thumbsup_all: No issues found!\n"
-        response += "\n_*Additional comments:*_"
         return response
     except:
         traceback.print_exc(file=sys.stderr)
