@@ -225,34 +225,34 @@ def show_commands():
 
 def update_issue(text, issue, username):
     user = rm_get_user(username)
-    issueid = rm_get_issue(issue)
+    issue = rm_get_issue(issue)
     # impersonate user so it looks like the update is from them
     rcn = rm_impersonate(user.login)
     try:
         (estimate, record, percent) = parse_keywords(text)
-        rm_update_issue(issue=issueid, notes=text, rcn=rcn, estimate=estimate, record=record, percent=percent, due=None, status=None)
-        return ":memo: Updated Issue "+issue_url(issueid)+" with comment `"+text+"`"
+        rm_update_issue(issue=issue.id, notes=text, rcn=rcn, estimate=estimate, record=record, percent=percent, due=None, status=None)
+        return ":memo: Updated Issue "+issue_subject_url(issue.id,issue.subject)+" with comment `"+text+"`"
     except:
         traceback.print_exc(file=sys.stderr)
         raise RuntimeError(":x: Issue update failed")
 
 def status_issue(text, issue, status, username):
     user = rm_get_user(username)
-    issueid = rm_get_issue(issue)
+    issue = rm_get_issue(issue)
     statusid, statusname = get_status(status)
     # impersonate user so it looks like the update is from them
     rcn = rm_impersonate(user.login)
     try:
         (estimate, record, percent) = parse_keywords(text)
-        rm_update_issue(issue=issueid, notes=text, rcn=rcn, estimate=estimate, record=record, percent=percent, status=statusid, due=None)
-        return ":white_check_mark: Changed status of Issue "+issue_url(issueid)+" to `"+statusname+"` with comment `"+text+"`"
+        rm_update_issue(issue=issue.id, notes=text, rcn=rcn, estimate=estimate, record=record, percent=percent, status=statusid, due=None)
+        return ":white_check_mark: Changed status of Issue "+issue_subject_url(issue.id,issue.subject)+" to `"+statusname+"` with comment `"+text+"`"
     except:
         traceback.print_exc(file=sys.stderr)
         raise RuntimeError(":x: Issue status update failed")
 
 def close_issue(text, issue, username):
     user = rm_get_user(username)
-    issueid = rm_get_issue(issue)
+    issue = rm_get_issue(issue)
     today = local2utc(datetime.today()).date()
     # impersonate user so it looks like the update is from them
     rcn = rm_impersonate(user.login)
@@ -260,8 +260,8 @@ def close_issue(text, issue, username):
         (estimate, record, percent) = parse_keywords(text)
         if not percent:
             percent = 100
-        rm_update_issue(issue=issueid, notes=text, rcn=rcn, estimate=estimate, record=record, percent=percent, status=REDMINE_CLOSED_ID, due=today)
-        return ":white_check_mark: Closed Issue "+issue_url(issueid)+" with comment `"+text+"`"
+        rm_update_issue(issue=issue.id, notes=text, rcn=rcn, estimate=estimate, record=record, percent=percent, status=REDMINE_CLOSED_ID, due=today)
+        return ":white_check_mark: Closed Issue "+issue_subject_url(issue.id,issue.subject)+" with comment `"+text+"`"
     except:
         traceback.print_exc(file=sys.stderr)
         raise RuntimeError(":x: Issue closing failed")
@@ -416,7 +416,7 @@ def rm_get_version(project, version):
 
 def rm_get_issue(issueid):
     try:
-        return rc.issue.get(int(issueid)).id
+        return rc.issue.get(int(issueid))
     except:
         traceback.print_exc(file=sys.stderr)
         raise RuntimeError(":x: Failed to find issue ID `"+issueid+"` in Redmine")
