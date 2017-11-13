@@ -236,7 +236,7 @@ def update_issue(text, issue, username):
     try:
         (estimate, record, percent) = parse_keywords(text)
         rm_update_issue(issue=issue.id, notes=text, rcn=rcn, estimate=estimate, record=record, percent=percent, due=None, status=None)
-        return ":memo: Updated Issue "+issue_subject_url(issue.id,issue.subject)+" with comment `"+text+"`"
+        return ":memo: Updated "+issue_subject_url(issue.id,issue.subject)+" with comment `"+text+"`"
     except:
         traceback.print_exc(file=sys.stderr)
         raise RuntimeError(":x: Issue update failed")
@@ -250,7 +250,7 @@ def status_issue(text, issue, status, username):
     try:
         (estimate, record, percent) = parse_keywords(text)
         rm_update_issue(issue=issue.id, notes=text, rcn=rcn, estimate=estimate, record=record, percent=percent, status=statusid, due=None)
-        return ":white_check_mark: Changed status of Issue "+issue_subject_url(issue.id,issue.subject)+" to `"+statusname+"` with comment `"+text+"`"
+        return ":white_check_mark: Changed status of "+issue_subject_url(issue.id,issue.subject)+" to `"+statusname+"` with comment `"+text+"`"
     except:
         traceback.print_exc(file=sys.stderr)
         raise RuntimeError(":x: Issue status update failed")
@@ -266,7 +266,7 @@ def close_issue(text, issue, username):
         if not percent:
             percent = 100
         rm_update_issue(issue=issue.id, notes=text, rcn=rcn, estimate=estimate, record=record, percent=percent, status=REDMINE_CLOSED_ID, due=today)
-        return ":white_check_mark: Closed Issue "+issue_subject_url(issue.id,issue.subject)+" with comment `"+text+"`"
+        return ":white_check_mark: Closed "+issue_subject_url(issue.id,issue.subject)+" with comment `"+text+"`"
     except:
         traceback.print_exc(file=sys.stderr)
         raise RuntimeError(":x: Issue closing failed")
@@ -282,7 +282,7 @@ def reject_issue(text, issue, username):
         if not percent:
             percent = 100
         rm_update_issue(issue=issue.id, notes=text, rcn=rcn, estimate=estimate, record=record, percent=percent, status=REDMINE_REJECTED_ID, due=today)
-        return ":white_check_mark: Rejected Issue "+issue_subject_url(issue.id,issue.subject)+" with comment `"+text+"`"
+        return ":white_check_mark: Rejected "+issue_subject_url(issue.id,issue.subject)+" with comment `"+text+"`"
     except:
         traceback.print_exc(file=sys.stderr)
         raise RuntimeError(":x: Issue rejecting failed")
@@ -296,7 +296,7 @@ def create_issue(text, username, assigneduser, project_name):
     try:
         (estimate, clean_text) = parse_remove_estimate(text)
         issue = rm_create_issue(estimate=estimate, subject=clean_text, rcn=rcn, assigned=assigned.id, project=project.identifier, version=None)
-        return ":white_check_mark: Created Issue "+issue_subject_url(issue.id,issue.subject)+" in project `"+project.name+"` assigned to "+assigned.firstname+" "+assigned.lastname
+        return ":white_check_mark: Created "+issue_subject_url(issue.id,issue.subject)+" in project `"+project.name+"` assigned to "+assigned.firstname+" "+assigned.lastname
     except:
         traceback.print_exc(file=sys.stderr)
         raise RuntimeError(":x: Issue creation failed")
@@ -311,7 +311,7 @@ def create_issue_version(text, username, assigneduser, project_name, version_nam
     try:
         (estimate, clean_text) = parse_remove_estimate(text)
         issue = rm_create_issue(estimate=estimate, subject=clean_text, rcn=rcn, assigned=assigned.id, project=project.identifier, version=version.id)
-        return ":white_check_mark: Created Issue "+issue_subject_url(issue.id,issue.subject)+" in project `"+project.name+"` with version `"+version.name+"` assigned to "+assigned.firstname+" "+assigned.lastname
+        return ":white_check_mark: Created "+issue_subject_url(issue.id,issue.subject)+" in project `"+project.name+"` with version `"+version.name+"` assigned to "+assigned.firstname+" "+assigned.lastname
         return ""+str(version)
     except:
         traceback.print_exc(file=sys.stderr)
