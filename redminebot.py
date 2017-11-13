@@ -123,6 +123,10 @@ def handle_command(command, channel, user, username):
                 issue = commands[1]
                 newmsg = s.join(commands[2:])
                 response = close_issue(newmsg, issue, username)
+            elif operator == "reject" and len(commands) > 2:
+                issue = commands[1]
+                newmsg = s.join(commands[2:])
+                response = reject_issue(newmsg, issue, username)
             elif operator == "list":
                 response = list_issues(username)
             elif operator == "listall":
@@ -209,6 +213,7 @@ def show_commands():
             "`status <issue #> <status> <comment>` - changes the status of an issue\n" \
             "\t`<status>` must be one of the following: "+list_status_keys()+"\n" \
             "`close <issue #> <comment>` - closes an issue with the following comment\n" \
+            "`reject <issue #> <comment>` - rejects an issue with the following comment\n" \
             "`list` - list all open issues assigned to you\n" \
             "`listfor <name>` - list all open issues assigned to `<name>`\n" \
             "`listall` - list all open issues\n" \
@@ -265,6 +270,22 @@ def close_issue(text, issue, username):
     except:
         traceback.print_exc(file=sys.stderr)
         raise RuntimeError(":x: Issue closing failed")
+
+def reject_issue(text, issue, username):
+    user = rm_get_user(username)
+    issue = rm_get_issue(issue)
+    today = local2utc(datetime.today()).date()
+    # impersonate user so it looks like the update is from them
+    rcn = rm_impersonate(user.login)
+    try:
+        (estimate, record, percent) = parse_keywords(text)
+        if not percent:
+            percent = 100
+        rm_update_issue(issue=issue.id, notes=text, rcn=rcn, estimate=estimate, record=record, percent=percent, status=REDMINE_REJECTED_ID, due=today)
+        return ":white_check_mark: Rejected Issue "+issue_subject_url(issue.id,issue.subject)+" with comment `"+text+"`"
+    except:
+        traceback.print_exc(file=sys.stderr)
+        raise RuntimeError(":x: Issue rejecting failed")
 
 def create_issue(text, username, assigneduser, project_name):
     user = rm_get_user(username)
