@@ -304,7 +304,7 @@ def list_issues(username):
         if len(result) > 0:
             response = ":book: *Open Issues Assigned to "+user.firstname+" "+user.lastname+":*\n"
             for issue in result:
-                response += ""+issue.project.name+" "+issue_subject_url(issue.id, issue.subject)+"\n"
+                response += issue_detail(issue, extended=False, user=False)
         else:
             response = ":thumbsup_all: No open issues assigned to "+user.firstname+" "+user.lastname
         return response
@@ -319,11 +319,7 @@ def list_all_issues():
         if len(result) > 0:
             response = ":book: *All Open Issues:*\n"
             for issue in result:
-                assigned = check_key_exists(issue, 'assigned_to')
-                username = ""
-                if assigned:
-                    username += " :bookmark: "+issue.assigned_to.name
-                response += ""+issue.project.name+" "+issue_subject_url(issue.id, issue.subject)+username+"\n"
+                response += issue_detail(issue, extended=False, user=True)
         else:
             response = ":thumbsup_all: No open issues found"
         return response
@@ -338,7 +334,7 @@ def list_unassigned_issues():
         if len(result) > 0:
             response = ":book: *All Open and Unassigned Issues:*\n"
             for issue in result:
-                response += ""+issue.project.name+" "+issue_subject_url(issue.id, issue.subject)+"\n"
+                response += issue_detail(issue, extended=False, user=False)
         else:
             response = ":thumbsup_all: No open and unassigned issues found"
         return response
@@ -357,8 +353,7 @@ def daily_scrum(username):
                 issues_found = True
                 response += "*_"+STATUS_NAME_LOOKUP[s]+" ("+str(len(result))+")_*\n"
                 for issue in result:
-                    tag = "" + issue_tag(issue.created_on, issue.updated_on)
-                    response += "> "+tag+" "+issue.project.name+" "+issue_subject_url(issue.id, issue.subject)+issue_time_percent_details(issue)+"\n"
+                    response += issue_detail(issue, extended=True, user=False)
         if not issues_found:
             response += ":thumbsup_all: No issues found!\n"
         response += "\n_*Additional comments:*_"
@@ -378,16 +373,13 @@ def daily_eod(username):
                 issues_found = True
                 response += "*_"+STATUS_NAME_LOOKUP[s]+" ("+str(len(result))+")_*\n"
                 for issue in result:
-                    tag = "" + issue_tag(issue.created_on, issue.updated_on)
-                    response += "> "+tag+" "+issue.project.name+" "+issue_subject_url(issue.id, issue.subject)+issue_time_percent_details(issue)+"\n"
-        for s in SCRUM_ORDER:
+                    response += issue_detail(issue, extended=True, user=False)
             result = rm_get_user_issues(user.id, s)
             if len(result) > 0:
                 issues_found = True
                 response += "*_"+STATUS_NAME_LOOKUP[s]+" ("+str(len(result))+")_*\n"
                 for issue in result:
-                    tag = "" + issue_tag(issue.created_on, issue.updated_on)
-                    response += "> "+tag+" "+issue.project.name+" "+issue_subject_url(issue.id, issue.subject)+issue_time_percent_details(issue)+"\n"
+                    response += issue_detail(issue, extended=True, user=False)
         if not issues_found:
             response += ":thumbsup_all: No issues found!\n"
         response += "\n_*Additional comments:*_"
@@ -602,6 +594,32 @@ def issue_tag(created, updated):
         elif (today - udate).days >= 8:
             return ":snowflake:"
     return ":grey_question:"
+
+def issue_version(issue):
+    if check_key_exists(issue, 'fixed_version'):
+        return " - "+issue.fixed_version.name
+    else:
+        return ""
+
+def issue_user(issue):
+    if check_key_exists(issue, 'assigned_to'):
+        return " :bookmark: "+issue.assigned_to.name
+    else:
+        return ""
+
+def issue_detail(issue, extended=False, user=False):
+    version = issue_version(issue)
+    tag = issue_tag(issue.created_on, issue.updated_on)
+    username = issue_user(issue)
+    response = "> "+tag+" "+issue.project.name+version+" "+ \
+               issue_subject_url(issue.id, issue.subject)
+    if extended:
+        response += issue_time_percent_details(issue)
+    if user:
+        response += username
+
+    response += "\n"
+    return response
 
 """
     Time conversion helper functions
