@@ -86,47 +86,47 @@ def handle_command(command, channel, user, username):
             msg = s.join(commands[1:])
             if operator == "issueto" and len(commands) > 2:
                 assigneduser = commands[1]
-                newmsg = s.join(commands[2:])
-                response = create_issue(newmsg, username, assigneduser, REDMINE_PROJECT)
+                msg = s.join(commands[2:])
+                response = create_issue(msg, username, assigneduser, REDMINE_PROJECT)
             elif operator == "issue" and len(commands) > 1:
                 response = create_issue(msg, username, username, REDMINE_PROJECT)
             elif operator == "issuepto" and len(commands) > 3:
                 project = commands[1]
                 assigneduser = commands[2]
-                newmsg = s.join(commands[3:])
-                response = create_issue(newmsg, username, assigneduser, project)
+                msg = s.join(commands[3:])
+                response = create_issue(msg, username, assigneduser, project)
             elif operator == "issuep" and len(commands) > 2:
                 project = commands[1]
-                newmsg = s.join(commands[2:])
-                response = create_issue(newmsg, username, username, project)
+                msg = s.join(commands[2:])
+                response = create_issue(msg, username, username, project)
             elif operator == "issuepvto" and len(commands) > 4:
                 project = commands[1]
                 version = commands[2]
                 assigneduser = commands[3]
-                newmsg = s.join(commands[4:])
-                response = create_issue_version(newmsg, username, assigneduser, project, version)
+                msg = s.join(commands[4:])
+                response = create_issue_version(msg, username, assigneduser, project, version)
             elif operator == "issuepv" and len(commands) > 3:
                 project = commands[1]
                 version = commands[2]
-                newmsg = s.join(commands[3:])
-                response = create_issue_version(newmsg, username, username, project, version)
+                msg = s.join(commands[3:])
+                response = create_issue_version(msg, username, username, project, version)
             elif operator == "update" and len(commands) > 2:
                 issue = commands[1]
-                newmsg = s.join(commands[2:])
-                response = update_issue(newmsg, issue, username)
+                msg = s.join(commands[2:])
+                response = update_issue(msg, issue, username)
             elif operator == "status" and len(commands) > 3:
                 issue = commands[1]
                 status = commands[2]
-                newmsg = s.join(commands[3:])
-                response = status_issue(newmsg, issue, status, username)
+                msg = s.join(commands[3:])
+                response = status_issue(msg, issue, status, username)
             elif operator == "close" and len(commands) > 2:
                 issue = commands[1]
-                newmsg = s.join(commands[2:])
-                response = close_issue(newmsg, issue, username)
+                msg = s.join(commands[2:])
+                response = close_issue(msg, issue, username)
             elif operator == "reject" and len(commands) > 2:
                 issue = commands[1]
-                newmsg = s.join(commands[2:])
-                response = reject_issue(newmsg, issue, username)
+                msg = s.join(commands[2:])
+                response = reject_issue(msg, issue, username)
             elif operator == "list":
                 response = list_issues(username)
             elif operator == "listall":
