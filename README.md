@@ -233,6 +233,27 @@ redminebot [10:00]
 @mikew :white_check_mark: Created #535 Push latest code in project `App` with version `v1` assigned to Josh Patterson
 ```
 
+### Assigning Issues
+
+#### `assign`
+
+**Function:** Assgin an existing issue to a new user with a comment
+
+**Usage:** `@redminebot assign <issue #> <name> <comment>`
+
+* `<issue #>` - Issue ID to assign
+* `<name>` - User assigned to issue (can be first, last, or user name in Redmine)
+* `<comment>` - Comment to add to issue (can use **all** keywords)
+
+**Example:**
+```
+mikew [10:00]
+@redminebot assign 535 keith Can you tackle this?
+
+redminebot [10:00]
+@mikew :memo: Assigned #535 Push latest code to Keith Kraus with comment `Can you tackle this?`
+```
+
 ### Updating Issues
 
 #### `update`

@@ -111,6 +111,11 @@ def handle_command(command, channel, user, username):
                 version = commands[2]
                 msg = s.join(commands[3:])
                 response = create_issue_version(msg, username, username, project, version)
+            elif operator == "assign" and len(commands) > 3:
+                issue = commands[1]
+                assigneduser = commands[2]
+                msg = s.join(commands[3:])
+                response = assign_issue(msg, issue, username, assigneduser)
             elif operator == "update" and len(commands) > 2:
                 issue = commands[1]
                 msg = s.join(commands[2:])
@@ -226,6 +231,7 @@ def show_commands():
             "> `issuepto <project> <name> <subject>` - creates new issue assigned to `<name>` in `<project>`\n" \
             "> `issuepv <project> <version> <subject>` - creates new issue assigned to you in `<project>` with version `<version>`\n" \
             "> `issuepvto <project> <version> <name> <subject>` - creates new issue assigned to `<name>` in `<project>` with version `<version>`\n" \
+            "> `assign <issue #> <name> <comment>` - assigns an issue to `<name>`\n" \
             "> `update <issue #> <comment>` - updates an issue with the following `<comment>`\n" \
             "> `status <issue #> <status> <comment>` - changes the status of an issue\n" \
             ">\t`<status>` must be one of the following: "+list_status_keys()+"\n" \
@@ -252,7 +258,21 @@ def show_commands():
             "_*NOTE:* These keywords can be used in_ `<comment>` _text only_\n" \
             "> Record time - `!<t>h` - where `<t>` is an integer/decimal for # of hours\n" \
             "> Percent done - `%<p>` - where `<p>` is an integer from 0-100\n\n" \
-            "For more on usage with examples see <https://github.com/mike-wendt/redmine-slackbot#usage|README>\n"
+            "For more help with examples, see <https://github.com/mike-wendt/redmine-slackbot#usage|README>\n"
+
+def assign_issue(text, issue, username, assigneduser):
+    user = rm_get_user(username)
+    assigned = rm_get_user(assigneduser)
+    issue = rm_get_issue(issue)
+    # impersonate user so it looks like the update is from them
+    rcn = rm_impersonate(user.login)
+    try:
+        (estimate, record, percent) = parse_keywords(text)
+        rm_update_issue(issue=issue.id, notes=text, rcn=rcn, estimate=estimate, record=record, percent=percent, assigned=assigned.id)
+        return ":memo: Assigned "+issue_subject_url(issue.id,issue.subject)+" to "+assigned.firstname+" "+assigned.lastname+" with comment `"+text+"`"
+    except:
+        traceback.print_exc(file=sys.stderr)
+        raise RuntimeError(":x: Issue assign failed")
 
 def update_issue(text, issue, username):
     user = rm_get_user(username)
@@ -579,7 +599,7 @@ def rm_create_issue(estimate, assigned, subject, project, rcn, version=None, pri
         traceback.print_exc(file=sys.stderr)
         raise RuntimeError(":x: Issue creation failed")
 
-def rm_update_issue(issue, estimate, percent, notes, record, rcn, status=None, due=None, priority=None):
+def rm_update_issue(issue, estimate, percent, notes, record, rcn, status=None, due=None, priority=None, assigned=None):
     params = dict()
     if estimate:
         params['estimated_hours'] = estimate
@@ -595,6 +615,8 @@ def rm_update_issue(issue, estimate, percent, notes, record, rcn, status=None, d
         rm_record_time(issue, record, rcn)
     if priority:
         params['priority_id'] = priority
+    if assigned:
+        params['assigned_to_id'] = assigned
 
     try:
         result = rcn.issue.update(issue, **params)
