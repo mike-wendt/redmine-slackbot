@@ -251,7 +251,8 @@ def show_commands():
             "> Estimate time - `$<t>h` - where `<t>` is an integer/decimal for # of hours\n" \
             "_*NOTE:* These keywords can be used in_ `<comment>` _text only_\n" \
             "> Record time - `!<t>h` - where `<t>` is an integer/decimal for # of hours\n" \
-            "> Percent done - `%<p>` - where `<p>` is an integer from 0-100\n"
+            "> Percent done - `%<p>` - where `<p>` is an integer from 0-100\n\n" \
+            "For more on usage with examples see <https://github.com/mike-wendt/redmine-slackbot#usage|README>\n"
 
 def update_issue(text, issue, username):
     user = rm_get_user(username)
