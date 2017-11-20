@@ -440,6 +440,7 @@ def daily_eod(username):
                 response += "*_"+STATUS_NAME_LOOKUP[s]+" ("+str(len(result))+")_*\n"
                 for issue in result:
                     response += issue_detail(issue, extended=True, user=False)
+        for s in SCRUM_ORDER:
             result = rm_get_user_issues(user.id, s)
             if len(result) > 0:
                 issues_found = True
