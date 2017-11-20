@@ -3,9 +3,16 @@ Slackbot for Redmine to add issues and assign them to yourself or others
 
 ## Overview
 
-`redmine-slackbot` is a Slackbot that runs locally on a Redmine server providing access to create, update, list, and close issues from Slack. In addition there is now support for keywords to set estimated time, record time spent, and to change the percent done for issues. Another new feature is a daily scrum generator organizing open issues with time and percent done information.
+`redmine-slackbot` is a Slackbot that runs locally on a Redmine server providing
+access to create, update, list, and close issues from Slack. In addition there
+is now support for keywords to set estimated time, record time spent, and to
+change the percent done for issues. Another new feature is a daily scrum
+generator organizing open issues with time and percent done information.
 
-The motivation to build this bot was to more easily access and track issues with Redmine and not have to be on VPN to do so. Since the Slackbot runs locally on the Redmine server it reaches out to Slack and listens for incoming messages removing the need for a VPN connection.
+The motivation to build this bot was to more easily access and track issues
+with Redmine and not have to be on VPN to do so. Since the Slackbot runs
+locally on the Redmine server it reaches out to Slack and listens for incoming
+messages removing the need for a VPN connection.
 
 ## Install
 
@@ -21,7 +28,8 @@ pip install python-redmine
 
 ### Slack
 
-1. Create [a bot named `@redminebot`](https://my.slack.com/services/new/bot) and save the API token
+1. Create [a bot named `@redminebot`](https://my.slack.com/services/new/bot) and
+save the API token
 
  `export BOT_TOKEN="<slack api token>"`
 
@@ -32,19 +40,26 @@ pip install python-redmine
 ### Redmine
 
 1. Get Redmine version from `http://redmine/admin/info`
-2. Get API key from user profile that has Admin access (may have to enable REST API in Admin if not seen)
+2. Get API key from user profile that has Admin access (may have to enable REST
+API in Admin if not seen)
 3. Locate the IDs for all issue statuses
- * Go to `http://redmine/issue_statuses` and click on each status; the number in the URL will be the ID
+ * Go to `http://redmine/issue_statuses` and click on each status; the number in
+the URL will be the ID
  * For example: the status ID is `5` from this URL `http://redmine/issue_statuses/5/edit`
 4. Locate the time activity ID for recording time spent
- * Go to `http://redmine/enumerations` and select the activity to use for recording time; the number in the URL will be the ID
+ * Go to `http://redmine/enumerations` and select the activity to use for
+recording time; the number in the URL will be the ID
  * For example: the activity ID is `12` from this URL `http://redmine/enumerations/12/edit`
-5. Create a project called `General` or specify another project by its identifier for all new issues to be created in
- * To find an existing project identifier, load the project page and look at the URL; all text to the right of `project/` is the identifier
+5. Create a project called `General` or specify another project by its
+identifier for all new issues to be created in
+ * To find an existing project identifier, load the project page and look at the
+URL; all text to the right of `project/` is the identifier
  * For example: the project identifier is `general` from the URL `http://redmine/projects/general`
-6. Create a project called 'Top5' or specify another project by its identifier for all Top 5 issues to use
+6. Create a project called 'Top5' or specify another project by its identifier
+for all Top 5 issues to use
 7. Locate the ID for the tracker to use when creating new issues
- * Go to `http://redmine/trackers` and click on the tracker you would like to use, the number in the URL will be the ID
+ * Go to `http://redmine/trackers` and click on the tracker you would like to
+use, the number in the URL will be the ID
  * For example: the tracker `Task` ID is `2` from this URL `http://redmine/trackers/2/edit`
 
 ### Saving config
@@ -79,7 +94,8 @@ export BOT_TOKEN="<slack api token>"
 ```
 bash run.sh
 ```
-Recommended to use `supervisor` if you want a long running service that is fault tolerant
+Recommended to use `supervisor` if you want a long running service that is fault
+tolerant
 
 ### Supervisord example conf
 
@@ -98,4 +114,5 @@ stdout_logfile=/var/log/redminebot.out.log
 
 ## Source
 
-Thanks to https://www.fullstackpython.com/blog/build-first-slack-bot-python.html for the great starting point/guide
+Thanks to https://www.fullstackpython.com/blog/build-first-slack-bot-python.html
+for the great starting point/guide
