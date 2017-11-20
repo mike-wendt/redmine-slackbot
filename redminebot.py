@@ -273,7 +273,7 @@ def assign_issue(text, issue, username, assigneduser):
     try:
         (estimate, record, percent) = parse_keywords(text)
         rm_update_issue(issue=issue.id, notes=text, rcn=rcn, estimate=estimate, record=record, percent=percent, assigned=assigned.id)
-        return ":memo: Assigned "+issue_subject_url(issue.id,issue.subject)+" to "+assigned.firstname+" "+assigned.lastname+" with comment `"+text+"`"
+        return ":bookmark: Assigned "+issue_subject_url(issue.id,issue.subject)+" to "+assigned.firstname+" "+assigned.lastname+" with comment `"+text+"`"
     except:
         traceback.print_exc(file=sys.stderr)
         raise RuntimeError(":x: Issue assign failed")
