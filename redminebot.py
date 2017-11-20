@@ -260,7 +260,7 @@ def update_issue(text, issue, username):
     rcn = rm_impersonate(user.login)
     try:
         (estimate, record, percent) = parse_keywords(text)
-        rm_update_issue(issue=issue.id, notes=text, rcn=rcn, estimate=estimate, record=record, percent=percent, due=None, status=None)
+        rm_update_issue(issue=issue.id, notes=text, rcn=rcn, estimate=estimate, record=record, percent=percent)
         return ":memo: Updated "+issue_subject_url(issue.id,issue.subject)+" with comment `"+text+"`"
     except:
         traceback.print_exc(file=sys.stderr)
@@ -274,7 +274,7 @@ def status_issue(text, issue, status, username):
     rcn = rm_impersonate(user.login)
     try:
         (estimate, record, percent) = parse_keywords(text)
-        rm_update_issue(issue=issue.id, notes=text, rcn=rcn, estimate=estimate, record=record, percent=percent, status=statusid, due=None)
+        rm_update_issue(issue=issue.id, notes=text, rcn=rcn, estimate=estimate, record=record, percent=percent, status=statusid)
         return ":white_check_mark: Changed status of "+issue_subject_url(issue.id,issue.subject)+" to `"+statusname+"` with comment `"+text+"`"
     except:
         traceback.print_exc(file=sys.stderr)
@@ -320,7 +320,7 @@ def create_issue(text, username, assigneduser, project_name):
     rcn = rm_impersonate(user.login)
     try:
         (estimate, clean_text) = parse_remove_estimate(text)
-        issue = rm_create_issue(estimate=estimate, subject=clean_text, rcn=rcn, assigned=assigned.id, project=project.identifier, version=None)
+        issue = rm_create_issue(estimate=estimate, subject=clean_text, rcn=rcn, assigned=assigned.id, project=project.identifier)
         return ":white_check_mark: Created "+issue_subject_url(issue.id,issue.subject)+" in project `"+project.name+"` assigned to "+assigned.firstname+" "+assigned.lastname
     except:
         traceback.print_exc(file=sys.stderr)
@@ -462,7 +462,7 @@ def create_top5(text, username, rank):
     rcn = rm_impersonate(user.login)
     try:
         (estimate, clean_text) = parse_remove_estimate(text)
-        issue = rm_create_issue(estimate=estimate, subject=clean_text, rcn=rcn, assigned=user.id, project=REDMINE_TOP5_PROJECT, version=None, priority=priority)
+        issue = rm_create_issue(estimate=estimate, subject=clean_text, rcn=rcn, assigned=user.id, project=REDMINE_TOP5_PROJECT, priority=priority)
         return ":white_check_mark: Created Top 5 "+issue_subject_url(issue.id,issue.subject)+" with rank `"+str(rank)+"`"
     except:
         traceback.print_exc(file=sys.stderr)
@@ -476,7 +476,7 @@ def rank_top5(text, issue, username, rank):
     rcn = rm_impersonate(user.login)
     try:
         (estimate, record, percent) = parse_keywords(text)
-        rm_update_issue(issue=issue.id, notes=text, rcn=rcn, estimate=estimate, record=record, percent=percent, due=None, status=None, priority=priority)
+        rm_update_issue(issue=issue.id, notes=text, rcn=rcn, estimate=estimate, record=record, percent=percent, priority=priority)
         return ":memo: Updated Top 5 "+issue_subject_url(issue.id,issue.subject)+" to rank `"+str(rank)+"` with comment `"+text+"`"
     except:
         traceback.print_exc(file=sys.stderr)
@@ -557,7 +557,7 @@ def rm_impersonate(userlogin):
         traceback.print_exc(file=sys.stderr)
         raise RuntimeError(":x: Failed impersonate user `"+userlogin+"` in Redmine")
 
-def rm_create_issue(estimate, assigned, subject, project, version, rcn, priority=None):
+def rm_create_issue(estimate, assigned, subject, project, rcn, version=None, priority=None):
     params = dict()
     if estimate:
         params['estimated_hours'] = estimate
@@ -578,7 +578,7 @@ def rm_create_issue(estimate, assigned, subject, project, version, rcn, priority
         traceback.print_exc(file=sys.stderr)
         raise RuntimeError(":x: Issue creation failed")
 
-def rm_update_issue(issue, estimate, percent, status, due, notes, record, rcn, priority=None):
+def rm_update_issue(issue, estimate, percent, notes, record, rcn, status=None, due=None, priority=None):
     params = dict()
     if estimate:
         params['estimated_hours'] = estimate
