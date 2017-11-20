@@ -245,7 +245,7 @@ def show_commands():
             "> `t5` - lists your Top 5\n" \
             "> `t5for <user>` - lists Top 5 for user\n" \
             "> `t5add <rank> <subject>` - creates Top 5 with `<rank>` (1-5) and `<subject>`\n" \
-            "> `t5rank <issue id> <rank> <comment>` - changes the Top 5 issue to `<rank>` (1-5) with the following `<comment>`\n" \
+            "> `t5rank <issue #> <rank> <comment>` - changes the Top 5 issue to `<rank>` (1-5) with the following `<comment>`\n" \
             ":key: *List of keywords:*\n" \
             "_*NOTE:*_ This keyword can be used in_ `<subject>` or `<comment>`\n" \
             "> Estimate time - `$<t>h` - where `<t>` is an integer/decimal for # of hours\n" \
