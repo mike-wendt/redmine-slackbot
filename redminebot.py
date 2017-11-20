@@ -231,31 +231,32 @@ def show_commands():
             "> `issuepto <project> <name> <subject>` - creates new issue assigned to `<name>` in `<project>`\n" \
             "> `issuepv <project> <version> <subject>` - creates new issue assigned to you in `<project>` with version `<version>`\n" \
             "> `issuepvto <project> <version> <name> <subject>` - creates new issue assigned to `<name>` in `<project>` with version `<version>`\n" \
-            "> `assign <issue #> <name> <comment>` - assigns an issue to `<name>`\n" \
-            "> `update <issue #> <comment>` - updates an issue with the following `<comment>`\n" \
-            "> `status <issue #> <status> <comment>` - changes the status of an issue\n" \
+            "> `assign <issue #> <name> <comment>` - assigns issue to `<name>`\n" \
+            "> `update <issue #> <comment>` - updates issue with comment\n" \
+            "> `status <issue #> <status> <comment>` - changes status of an issue\n" \
             ">\t`<status>` must be one of the following: "+list_status_keys()+"\n" \
-            "> `close <issue #> <comment>` - closes an issue with the following comment\n" \
-            "> `reject <issue #> <comment>` - rejects an issue with the following comment\n" \
+            "> `close <issue #> <comment>` - closes issue with comment\n" \
+            "> `reject <issue #> <comment>` - rejects issue with comment\n" \
             "*List Commands:*\n" \
             "> `list` - lists all open issues assigned to you\n" \
             "> `listfor <name>` - lists all open issues assigned to `<name>`\n" \
             "> `listall` - lists all open issues\n" \
             "> `listun` - lists all open and unassigned issues\n" \
             "*Scrum & End of Day Commands:*\n" \
-            "> `scrum` - generates daily scrum for issues assigned to you\n" \
-            "> `scrumfor <name>` - generates daily scrum for issues assigned to `<name>`\n" \
-            "> `eod` - generates end of day report for issues assigned to you\n" \
-            "> `eodfor <name>` - generates end of day report for issues assigned to `<name>`\n" \
+            "> `scrum` - generates daily scrum for you\n" \
+            "> `scrumfor <name>` - generates daily scrum for `<name>`\n" \
+            "> `eod` - generates end of day report for you\n" \
+            "> `eodfor <name>` - generates end of day report for `<name>`\n" \
             "*Top 5 Commands:*\n" \
             "> `t5` - lists your Top 5\n" \
             "> `t5for <user>` - lists Top 5 for user\n" \
-            "> `t5add <rank> <subject>` - creates Top 5 with `<rank>` (1-5) and `<subject>`\n" \
-            "> `t5rank <issue #> <rank> <comment>` - changes the Top 5 issue to `<rank>` (1-5) with the following `<comment>`\n" \
+            "> `t5add <rank> <subject>` - creates Top 5 with `<rank>` (1-5)\n" \
+            "> `t5rank <issue #> <rank> <comment>` - changes the Top 5 issue to `<rank>` (1-5) with comment\n" \
+            "_*NOTE:*_ Top 5 issues can be updated & closed with general issue commands\n" \
             ":key: *List of keywords:*\n" \
-            "_*NOTE:*_ This keyword can be used in_ `<subject>` or `<comment>`\n" \
+            "_This keyword can be used in `<subject>` or `<comment>` _\n" \
             "> Estimate time - `$<t>h` - where `<t>` is an integer/decimal for # of hours\n" \
-            "_*NOTE:* These keywords can be used in_ `<comment>` _text only_\n" \
+            "_These keywords can be used in `<comment>` text only_\n" \
             "> Record time - `!<t>h` - where `<t>` is an integer/decimal for # of hours\n" \
             "> Percent done - `%<p>` - where `<p>` is an integer from 0-100\n\n" \
             "For more help with examples, see <https://github.com/mike-wendt/redmine-slackbot/wiki|Usage Guide>\n"
