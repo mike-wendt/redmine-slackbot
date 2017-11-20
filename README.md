@@ -22,11 +22,11 @@ pip install python-redmine
 ### Slack
 
 1. Create [a bot named `@redminebot`](https://my.slack.com/services/new/bot) and save the API token
- 
+
  `export BOT_TOKEN="<slack api token>"`
- 
+
 2. Run the following Python script to get the bot's user ID for `BOT_ID`
- 
+
  `python print_bot_id.py`
 
 ### Redmine
@@ -41,14 +41,15 @@ pip install python-redmine
  * For example: the activity ID is `12` from this URL `http://redmine/enumerations/12/edit`
 5. Create a project called `General` or specify another project by its identifier for all new issues to be created in
  * To find an existing project identifier, load the project page and look at the URL; all text to the right of `project/` is the identifier
- * For example: the project identifier is `general` from the URL `http://redmine/projects/general` 
-6. Locate the ID for the tracker to use when creating new issues
+ * For example: the project identifier is `general` from the URL `http://redmine/projects/general`
+
+7. Locate the ID for the tracker to use when creating new issues
  * Go to `http://redmine/trackers` and click on the tracker you would like to use, the number in the URL will be the ID
  * For example: the tracker `Task` ID is `2` from this URL `http://redmine/trackers/2/edit`
 
 ### Saving config
 
-1. Copy `run.sh.example` to `run.sh` 
+1. Copy `run.sh.example` to `run.sh`
 
  `cp run.sh.example run.sh`
 
