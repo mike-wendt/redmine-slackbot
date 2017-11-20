@@ -259,7 +259,10 @@ def show_commands():
             "_These keywords can be used in `<comment>` text only_\n" \
             "> Record time - `!<t>h` - where `<t>` is an integer/decimal for # of hours\n" \
             "> Percent done - `%<p>` - where `<p>` is an integer from 0-100\n\n" \
-            "For more help with examples, see <https://github.com/mike-wendt/redmine-slackbot/wiki|Usage Guide>\n"
+            ":information_source: *Further Help:*\n" \
+            "> Meaning of emojis used to tag issues, see <https://github.com/mike-wendt/redmine-slackbot/wiki/Issue-Emoji-Meanings|Emoji Meanings>\n" \
+            "> Full help with examples, see <https://github.com/mike-wendt/redmine-slackbot/wiki|Usage Guide>\n"
+
 
 def assign_issue(text, issue, username, assigneduser):
     user = rm_get_user(username)
