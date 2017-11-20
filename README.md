@@ -42,7 +42,7 @@ pip install python-redmine
 5. Create a project called `General` or specify another project by its identifier for all new issues to be created in
  * To find an existing project identifier, load the project page and look at the URL; all text to the right of `project/` is the identifier
  * For example: the project identifier is `general` from the URL `http://redmine/projects/general`
-
+6. Create a project called 'Top5' or specify another project by its identifier for all Top 5 issues to use
 7. Locate the ID for the tracker to use when creating new issues
  * Go to `http://redmine/trackers` and click on the tracker you would like to use, the number in the URL will be the ID
  * For example: the tracker `Task` ID is `2` from this URL `http://redmine/trackers/2/edit`
@@ -68,6 +68,7 @@ export REDMINE_REJECTED_ID="6"
 export REDMINE_HOLD_ID="7"
 export REDMINE_ACTIVITY_ID="12"
 export REDMINE_PROJECT="general"
+export REDMINE_TOP5_PROJECT="top5"
 export REDMINE_TRACKER_ID="2"
 export BOT_ID="<from print_bot_id.py>"
 export BOT_TOKEN="<slack api token>"

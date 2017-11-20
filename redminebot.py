@@ -23,6 +23,7 @@ REDMINE_REJECTED_ID = os.environ.get('REDMINE_REJECTED_ID')
 REDMINE_HOLD_ID = os.environ.get('REDMINE_HOLD_ID')
 REDMINE_ACTIVITY_ID = os.environ.get('REDMINE_ACTIVITY_ID')
 REDMINE_PROJECT = os.environ.get('REDMINE_PROJECT')
+REDMINE_TOP5_PROJECT = os.environ.get('REDMINE_TOP5_PROJECT')
 REDMINE_TRACKER_ID = os.environ.get('REDMINE_TRACKER_ID')
 BOT_ID = os.environ.get('BOT_ID')
 BOT_TOKEN = os.environ.get('BOT_TOKEN')
@@ -146,6 +147,20 @@ def handle_command(command, channel, user, username):
             elif operator == "eodfor" and len(commands) > 1:
                 listuser = commands[1]
                 response = daily_eod(listuser)
+            elif operator == "t5":
+                response = list_top5(username)
+            elif operator == "t5for" and len(commands) > 1:
+                t5user = commands[1]
+                response = list_top5(t5user)
+            elif operator == "t5add" and len(commands) > 2:
+                rank = commands[1]
+                msg = s.join(commands[2:])
+                response = create_top5(msg, username, rank)
+            elif operator == "t5rank" and len(commands) > 3:
+                issue = commands[1]
+                rank = commands[2]
+                msg = s.join(commands[3:])
+                response = rank_top5(msg, issue, username, rank)
             elif operator == "help":
                 response = show_commands()
             elif int(commands[0]) > 0:
@@ -202,31 +217,41 @@ def show_commands():
         Return ist of commands that bot can handle
     """
     return ":hammer_and_wrench: *List of supported commands:*\n" \
-            "`<issue #>` - returns a link to the referenced issue number\n" \
-            "`issue <subject>` - creates new issue and assigns it to you\n" \
-            "`issueto <name> <subject>` - creates new issue and assigns it to `<name>`\n" \
-            "`issuep <project> <subject>` - creates new issue in `<project>` and assigns it to you\n" \
-            "`issuepto <project> <name> <subject>` - creates new issue and assigns it to `<name>` in `<project>`\n" \
-            "`issuepv <project> <version> <subject>` - creates new issue in `<project>` with version `<version>` and assigns it to you\n" \
-            "`issuepvto <project> <version> <name> <subject>` - creates new issue and assigns it to `<name>` in `<project>` with version `<version>`\n" \
-            "`update <issue #> <comment>` - updates an issue with the following `<comment>`\n" \
-            "`status <issue #> <status> <comment>` - changes the status of an issue\n" \
-            "\t`<status>` must be one of the following: "+list_status_keys()+"\n" \
-            "`close <issue #> <comment>` - closes an issue with the following comment\n" \
-            "`reject <issue #> <comment>` - rejects an issue with the following comment\n" \
-            "`list` - list all open issues assigned to you\n" \
-            "`listfor <name>` - list all open issues assigned to `<name>`\n" \
-            "`listall` - list all open issues\n" \
-            "`listun` - list all open and unassigned issues\n" \
-            "`scrum` - generate daily scrum for issues assigned to you\n" \
-            "`scrumfor <name>` - generate daily scrum for issues assigned to `<name>`\n" \
-            "`eod` - generate end of day report for issues assigned to you\n" \
-            "`eodfor <name>` - generate end of day report for issues assigned to `<name>`\n\n" \
+            "*Issue Link Command:*\n" \
+            "> `<issue #>` - returns a link to the referenced issue number\n" \
+            "*Issue Commands:*\n" \
+            "> `issue <subject>` - creates new issue assigned to you\n" \
+            "> `issueto <name> <subject>` - creates new issue assigned to `<name>`\n" \
+            "> `issuep <project> <subject>` - creates new issue assigned to you in `<project>` \n" \
+            "> `issuepto <project> <name> <subject>` - creates new issue assigned to `<name>` in `<project>`\n" \
+            "> `issuepv <project> <version> <subject>` - creates new issue assigned to you in `<project>` with version `<version>`\n" \
+            "> `issuepvto <project> <version> <name> <subject>` - creates new issue assigned to `<name>` in `<project>` with version `<version>`\n" \
+            "> `update <issue #> <comment>` - updates an issue with the following `<comment>`\n" \
+            "> `status <issue #> <status> <comment>` - changes the status of an issue\n" \
+            ">\t`<status>` must be one of the following: "+list_status_keys()+"\n" \
+            "> `close <issue #> <comment>` - closes an issue with the following comment\n" \
+            "> `reject <issue #> <comment>` - rejects an issue with the following comment\n" \
+            "*List Commands:*\n" \
+            "> `list` - lists all open issues assigned to you\n" \
+            "> `listfor <name>` - lists all open issues assigned to `<name>`\n" \
+            "> `listall` - lists all open issues\n" \
+            "> `listun` - lists all open and unassigned issues\n" \
+            "*Scrum & End of Day Commands:*\n" \
+            "> `scrum` - generates daily scrum for issues assigned to you\n" \
+            "> `scrumfor <name>` - generates daily scrum for issues assigned to `<name>`\n" \
+            "> `eod` - generates end of day report for issues assigned to you\n" \
+            "> `eodfor <name>` - generates end of day report for issues assigned to `<name>`\n" \
+            "*Top 5 Commands:*\n" \
+            "> `t5` - lists your Top 5\n" \
+            "> `t5for <user>` - lists Top 5 for user\n" \
+            "> `t5add <rank> <subject>` - creates Top 5 with `<rank>` (1-5) and `<subject>`\n" \
+            "> `t5rank <issue id> <rank> <comment>` - changes the Top 5 issue to `<rank>` (1-5) with the following `<comment>`\n" \
             ":key: *List of keywords:*\n" \
-            "Estimate time - `$<t>h` - where `<t>` is an integer/decimal for # of hours\n" \
+            "_*NOTE:*_ This keyword can be used in_ `<subject>` or `<comment>`\n" \
+            "> Estimate time - `$<t>h` - where `<t>` is an integer/decimal for # of hours\n" \
             "_*NOTE:* These keywords can be used in_ `<comment>` _text only_\n" \
-            "Record time - `!<t>h` - where `<t>` is an integer/decimal for # of hours\n" \
-            "Percent done - `%<p>` - where `<p>` is an integer from 0-100\n"
+            "> Record time - `!<t>h` - where `<t>` is an integer/decimal for # of hours\n" \
+            "> Percent done - `%<p>` - where `<p>` is an integer from 0-100\n"
 
 def update_issue(text, issue, username):
     user = rm_get_user(username)
@@ -407,6 +432,56 @@ def daily_eod(username):
         traceback.print_exc(file=sys.stderr)
         raise RuntimeError(":x: EOD operation failed")
 
+def list_top5(username):
+    user = rm_get_user(username)
+    try:
+        top5_found = False
+        response = ":pushpin: *Top 5 for "+user.firstname+" "+user.lastname+":*\n"
+        for p in range(5, 0, -1):
+            result = rm_get_top5(user.id, p)
+            rank = 6 - p
+            cnt = 1
+            for issue in result:
+                if len(result) > 1:
+                    response += top5_detail(issue, rank, cnt)
+                    cnt += 1
+                else:
+                    response += top5_detail(issue, rank)
+                top5_found = True
+        if not top5_found:
+            response = ":thumbsup_all: No Top 5 for "+user.firstname+" "+user.lastname
+        return response
+    except:
+        traceback.print_exc(file=sys.stderr)
+        raise RuntimeError(":x: Top 5 list operation failed")
+
+def create_top5(text, username, rank):
+    user = rm_get_user(username)
+    priority = parse_rank(rank)
+    # impersonate user so it looks like the update is from them
+    rcn = rm_impersonate(user.login)
+    try:
+        (estimate, clean_text) = parse_remove_estimate(text)
+        issue = rm_create_issue(estimate=estimate, subject=clean_text, rcn=rcn, assigned=user.id, project=REDMINE_TOP5_PROJECT, version=None, priority=priority)
+        return ":white_check_mark: Created Top 5 "+issue_subject_url(issue.id,issue.subject)+" with rank `"+str(rank)+"`"
+    except:
+        traceback.print_exc(file=sys.stderr)
+        raise RuntimeError(":x: Top 5 creation failed")
+
+def rank_top5(text, issue, username, rank):
+    user = rm_get_user(username)
+    issue = rm_get_issue(issue)
+    priority = parse_rank(rank)
+    # impersonate user so it looks like the update is from them
+    rcn = rm_impersonate(user.login)
+    try:
+        (estimate, record, percent) = parse_keywords(text)
+        rm_update_issue(issue=issue.id, notes=text, rcn=rcn, estimate=estimate, record=record, percent=percent, due=None, status=None, priority=priority)
+        return ":memo: Updated Top 5 "+issue_subject_url(issue.id,issue.subject)+" to rank `"+str(rank)+"` with comment `"+text+"`"
+    except:
+        traceback.print_exc(file=sys.stderr)
+        raise RuntimeError(":x: Top 5 rank update failed")
+
 """
     Redmine functions
 """
@@ -482,7 +557,7 @@ def rm_impersonate(userlogin):
         traceback.print_exc(file=sys.stderr)
         raise RuntimeError(":x: Failed impersonate user `"+userlogin+"` in Redmine")
 
-def rm_create_issue(estimate, assigned, subject, project, version, rcn):
+def rm_create_issue(estimate, assigned, subject, project, version, rcn, priority=None):
     params = dict()
     if estimate:
         params['estimated_hours'] = estimate
@@ -492,6 +567,8 @@ def rm_create_issue(estimate, assigned, subject, project, version, rcn):
         params['assigned_to_id'] = assigned
     if version:
         params['fixed_version_id'] = version
+    if priority:
+        params['priority_id'] = priority
     if not project:
         project = REDMINE_PROJECT
 
@@ -501,7 +578,7 @@ def rm_create_issue(estimate, assigned, subject, project, version, rcn):
         traceback.print_exc(file=sys.stderr)
         raise RuntimeError(":x: Issue creation failed")
 
-def rm_update_issue(issue, estimate, percent, status, due, notes, record, rcn):
+def rm_update_issue(issue, estimate, percent, status, due, notes, record, rcn, priority=None):
     params = dict()
     if estimate:
         params['estimated_hours'] = estimate
@@ -515,6 +592,8 @@ def rm_update_issue(issue, estimate, percent, status, due, notes, record, rcn):
         params['notes'] = parse_replace_http(notes)
     if record:
         rm_record_time(issue, record, rcn)
+    if priority:
+        params['priority_id'] = priority
 
     try:
         result = rcn.issue.update(issue, **params)
@@ -540,6 +619,13 @@ def rm_sum_time_entries(issueid):
     except:
         traceback.print_exc(file=sys.stderr)
         raise RuntimeError(":x: Failed in summing time entries")
+
+def rm_get_top5(userid, priority):
+    try:
+        return rc.issue.filter(sort='project', assigned_to_id=userid, status_id='open', project_id=REDMINE_TOP5_PROJECT, priority_id=priority)
+    except:
+        traceback.print_exc(file=sys.stderr)
+        raise RuntimeError(":x: Failed to find Top 5 for user `"+username+"` in Redmine")
 
 """
     Status functions
@@ -636,6 +722,21 @@ def issue_detail(issue, extended=False, user=False):
         response += issue_time_percent_details(issue)
     if user:
         response += username
+
+    response += "\n"
+    return response
+
+def top5_detail(issue, rank, cnt=None):
+    tag = issue_tag(issue.created_on, issue.updated_on)
+    username = issue_user(issue)
+
+    rank_out = str(rank)
+    if cnt:
+        rank_out += "."+str(cnt)
+    rank_out += ") "
+
+    response = "> "+rank_out+" "+issue_subject_url(issue.id, issue.subject)+" "+ \
+               issue_time_percent_details(issue)
 
     response += "\n"
     return response
@@ -743,6 +844,16 @@ def parse_replace_http(msg):
             msg = msg.replace(m.group(1),m.group(2))
 
     return msg
+
+def parse_rank(rank):
+    """
+        Ensure rank is 1-5 and invert to match priorities
+    """
+    rank = int(rank)
+    if rank >= 1 and rank <= 5:
+        return int(6 - rank)
+    else:
+        raise RuntimeError(":x: Invalid rank `"+str(rank)+"`; rank should be 1-5")
 
 """
     Helper functions
