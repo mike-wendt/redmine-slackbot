@@ -258,7 +258,7 @@ def show_commands():
             "_*NOTE:* These keywords can be used in_ `<comment>` _text only_\n" \
             "> Record time - `!<t>h` - where `<t>` is an integer/decimal for # of hours\n" \
             "> Percent done - `%<p>` - where `<p>` is an integer from 0-100\n\n" \
-            "For more help with examples, see <https://github.com/mike-wendt/redmine-slackbot#usage|README>\n"
+            "For more help with examples, see <https://github.com/mike-wendt/redmine-slackbot/wiki|Usage Guide>\n"
 
 def assign_issue(text, issue, username, assigneduser):
     user = rm_get_user(username)
