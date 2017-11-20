@@ -763,7 +763,7 @@ def top5_detail(issue, rank, cnt=None):
         rank_out += "."+str(cnt)
     rank_out += ") "
 
-    response = "> "+rank_out+" "+issue_subject_url(issue.id, issue.subject)+" "+ \
+    response = "> "+tag+" "+rank_out+" "+issue_subject_url(issue.id, issue.subject)+" "+ \
                issue_time_percent_details(issue)
 
     response += "\n"
