@@ -650,7 +650,7 @@ def rm_sum_time_entries(issueid):
 
 def rm_get_top5(userid, priority):
     try:
-        return rc.issue.filter(sort='created_on', project_id=REDMINE_TOP5_PROJECT, assigned_to_id=userid, status_id='open', priority_id=priority)
+        return rc.issue.filter(sort='created_on', project_id=REDMINE_TOP5_PROJECT, author_id=userid, status_id='open', priority_id=priority)
     except:
         traceback.print_exc(file=sys.stderr)
         raise RuntimeError(":x: Failed to find Top 5 for user `"+username+"` in Redmine")
@@ -740,6 +740,12 @@ def issue_user(issue):
     else:
         return ""
 
+def issue_top5_user(issue):
+    if check_key_exists(issue, 'assigned_to') and issue.assigned_to.name != issue.author.name:
+        return " :bookmark: "+issue.assigned_to.name
+    else:
+        return ""
+
 def issue_detail(issue, extended=False, user=False):
     version = issue_version(issue)
     tag = issue_tag(issue.created_on, issue.updated_on)
@@ -756,7 +762,7 @@ def issue_detail(issue, extended=False, user=False):
 
 def top5_detail(issue, rank, cnt=None):
     tag = issue_tag(issue.created_on, issue.updated_on)
-    username = issue_user(issue)
+    username = issue_top5_user(issue)
 
     rank_out = str(rank)
     if cnt:
@@ -764,7 +770,7 @@ def top5_detail(issue, rank, cnt=None):
     rank_out += ") "
 
     response = "> "+tag+" "+rank_out+" "+issue_subject_url(issue.id, issue.subject)+" "+ \
-               issue_time_percent_details(issue)
+               issue_time_percent_details(issue) + username
 
     response += "\n"
     return response
