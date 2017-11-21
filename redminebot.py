@@ -111,10 +111,13 @@ def handle_command(command, channel, user, username):
                 version = commands[2]
                 msg = s.join(commands[3:])
                 response = create_issue_version(msg, username, username, project, version)
-            elif operator == "assign" and len(commands) > 3:
+            elif operator == "assign" and len(commands) > 2:
                 issue = commands[1]
                 assigneduser = commands[2]
-                msg = s.join(commands[3:])
+                if len(commands) > 3:
+                    msg = s.join(commands[3:])
+                else:
+                    msg = ""
                 response = assign_issue(msg, issue, username, assigneduser)
             elif operator == "update" and len(commands) > 2:
                 issue = commands[1]
@@ -231,7 +234,7 @@ def show_commands():
             "> `issuepto <project> <name> <subject>` - creates new issue assigned to `<name>` in `<project>`\n" \
             "> `issuepv <project> <version> <subject>` - creates new issue assigned to you in `<project>` with version `<version>`\n" \
             "> `issuepvto <project> <version> <name> <subject>` - creates new issue assigned to `<name>` in `<project>` with version `<version>`\n" \
-            "> `assign <issue #> <name> <comment>` - assigns issue to `<name>`\n" \
+            "> `assign <issue #> <name> [comment]` - assigns issue to `<name>`\n" \
             "> `update <issue #> <comment>` - updates issue with comment\n" \
             "> `status <issue #> <status> <comment>` - changes status of an issue\n" \
             ">\t`<status>` must be one of the following: "+list_status_keys()+"\n" \
@@ -268,12 +271,15 @@ def assign_issue(text, issue, username, assigneduser):
     user = rm_get_user(username)
     assigned = rm_get_user(assigneduser)
     issue = rm_get_issue(issue)
+    comment = " with comment `"+text+"`"
+    if text == "":
+        comment = ""
     # impersonate user so it looks like the update is from them
     rcn = rm_impersonate(user.login)
     try:
         (estimate, record, percent) = parse_keywords(text)
         rm_update_issue(issue=issue.id, notes=text, rcn=rcn, estimate=estimate, record=record, percent=percent, assigned=assigned.id)
-        return ":bookmark: Assigned "+issue_subject_url(issue.id,issue.subject)+" to "+assigned.firstname+" "+assigned.lastname+" with comment `"+text+"`"
+        return ":bookmark: Assigned "+issue_subject_url(issue.id,issue.subject)+" to "+assigned.firstname+" "+assigned.lastname+comment
     except:
         traceback.print_exc(file=sys.stderr)
         raise RuntimeError(":x: Issue assign failed")
