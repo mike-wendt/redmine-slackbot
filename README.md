@@ -94,7 +94,7 @@ export BOT_TOKEN="<slack api token>"
 ```
 bash run.sh
 ```
-Recommended to use `supervisor` if you want a long running service that is fault
+Recommended to use [supervisor](https://www.digitalocean.com/community/tutorials/how-to-install-and-manage-supervisor-on-ubuntu-and-debian-vps) if you want a long running service that is fault
 tolerant
 
 ### Supervisord example conf
