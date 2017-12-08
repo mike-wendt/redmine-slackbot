@@ -804,7 +804,7 @@ def issue_detail(issue, extended=False, user=False):
     version = issue_version(issue)
     tag = issue_tag(issue.created_on, issue.updated_on)
     username = issue_user(issue)
-    response = "> "+tag+" "+issue.project.name+version+" "+ \
+    response = "> "+tag+" *"+issue.project.name+version+"* "+ \
                issue_subject_url(issue.id, issue.subject)
     if extended:
         response += issue_time_percent_details(issue)
