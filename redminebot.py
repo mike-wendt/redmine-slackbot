@@ -797,6 +797,9 @@ def issue_top5_user(issue):
     else:
         return ""
 
+def issue_status(issue):
+    return "*"+issue.status.name+"*"
+
 def issue_detail(issue, extended=False, user=False):
     version = issue_version(issue)
     tag = issue_tag(issue.created_on, issue.updated_on)
@@ -820,7 +823,8 @@ def top5_detail(issue, rank, cnt=None):
         rank_out += "."+str(cnt)
     rank_out += ") "
 
-    response = "> "+tag+" "+rank_out+" "+issue_subject_url(issue.id, issue.subject)+" "+ \
+    response = "> "+tag+" "+rank_out+" "+issue_status(issue)+" "+ \
+               issue_subject_url(issue.id, issue.subject)+" "+ \
                issue_time_percent_details(issue) + username
 
     response += "\n"
