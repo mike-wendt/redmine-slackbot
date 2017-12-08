@@ -4,6 +4,7 @@ import re
 import sys
 import traceback
 from datetime import datetime
+from datetime import timedelta
 from slackclient import SlackClient
 from redminelib import Redmine
 
@@ -155,6 +156,11 @@ def handle_command(command, channel, user, username):
             elif operator == "eodfor" and len(commands) > 1:
                 listuser = commands[1]
                 response = daily_eod(listuser)
+            elif operator == "eow":
+                response = weekly_eow(username)
+            elif operator == "eowfor" and len(commands) > 1:
+                listuser = commands[1]
+                response = weekly_eow(listuser)
             elif operator == "t5":
                 response = list_top5(username)
             elif operator == "t5for" and len(commands) > 1:
@@ -245,11 +251,13 @@ def show_commands():
             "> `listfor <name>` - lists all open issues assigned to `<name>`\n" \
             "> `listall` - lists all open issues\n" \
             "> `listun` - lists all open and unassigned issues\n" \
-            "*Scrum & End of Day Commands:*\n" \
+            "*Scrum & End of Day/Week Commands:*\n" \
             "> `scrum` - generates daily scrum for you\n" \
             "> `scrumfor <name>` - generates daily scrum for `<name>`\n" \
             "> `eod` - generates end of day report for you\n" \
             "> `eodfor <name>` - generates end of day report for `<name>`\n" \
+            "> `eow` - generates end of week report for you\n" \
+            "> `eowfor <name>` - generates end of week report for `<name>`\n" \
             "*Top 5 Commands:*\n" \
             "> `t5` - lists your Top 5\n" \
             "> `t5for <user>` - lists Top 5 for user\n" \
@@ -464,6 +472,32 @@ def daily_eod(username):
         traceback.print_exc(file=sys.stderr)
         raise RuntimeError(":x: EOD operation failed")
 
+def weekly_eow(username):
+    user = rm_get_user(username)
+    try:
+        response = ":newspaper: *End of Week Report for "+user.firstname+" "+user.lastname+":*\n"
+        issues_found = False
+        for s in EOD_ORDER:
+            result = rm_get_user_issues_week(user.id, s)
+            if len(result) > 0:
+                issues_found = True
+                response += "*_"+STATUS_NAME_LOOKUP[s]+" ("+str(len(result))+")_*\n"
+                for issue in result:
+                    response += issue_detail(issue, extended=True, user=False)
+        for s in SCRUM_ORDER:
+            result = rm_get_user_issues(user.id, s)
+            if len(result) > 0:
+                issues_found = True
+                response += "*_"+STATUS_NAME_LOOKUP[s]+" ("+str(len(result))+")_*\n"
+                for issue in result:
+                    response += issue_detail(issue, extended=True, user=False)
+        if not issues_found:
+            response += ":thumbsup_all: No issues found!\n"
+        return response
+    except:
+        traceback.print_exc(file=sys.stderr)
+        raise RuntimeError(":x: EOW operation failed")
+
 def list_top5(username):
     user = rm_get_user(username)
     try:
@@ -564,6 +598,17 @@ def rm_get_user_issues_today(userid, status):
     try:
         today = datetime.today().date()
         return rc.issue.filter(sort='project', assigned_to_id=userid, status_id=status, updated_on=today)
+    except:
+        traceback.print_exc(file=sys.stderr)
+        raise RuntimeError(":x: Failed to find issues for user `"+username+"` in Redmine")
+
+def rm_get_user_issues_week(userid, status):
+    if not status:
+        status = 'open'
+    try:
+        today = datetime.today().date()
+        last_week = (datetime.today() - timedelta(days=7)).date()
+        return rc.issue.filter(sort='project', assigned_to_id=userid, status_id=status, updated_on='><'+str(last_week)+'|'+str(today))
     except:
         traceback.print_exc(file=sys.stderr)
         raise RuntimeError(":x: Failed to find issues for user `"+username+"` in Redmine")
