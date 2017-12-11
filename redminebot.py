@@ -608,7 +608,6 @@ def rm_get_user_issues(userid, status, project):
         params['status_id'] = status
     if project:
         params['project_id'] = project
-    print project
     try:
         return rc.issue.filter(sort='project', assigned_to_id=userid, **params)
     except:
