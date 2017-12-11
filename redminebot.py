@@ -195,7 +195,7 @@ def handle_command(command, channel, user, username):
                 response = show_commands()
             elif int(commands[0]) > 0:
                 issue = int(commands[0])
-                response = "Issue: "+issue_url(issue)
+                response = link_issue(issue)
     except ValueError:
         respone = show_commands()
     except RuntimeError as e:
@@ -291,6 +291,9 @@ def show_commands():
             "> Meaning of emojis used to tag issues, see <https://github.com/mike-wendt/redmine-slackbot/wiki/Issue-Emoji-Meanings|Emoji Meanings>\n" \
             "> Full help with examples, see <https://github.com/mike-wendt/redmine-slackbot/wiki|Usage Guide>\n"
 
+def link_issue(issue):
+    issue = rm_get_issue(issue)
+    return ":mag: "+issue_subject_url(issue.id,issue.subject)
 
 def assign_issue(text, issue, username, assigneduser):
     user = rm_get_user(username)
