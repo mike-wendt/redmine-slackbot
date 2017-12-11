@@ -138,14 +138,30 @@ def handle_command(command, channel, user, username):
                 msg = s.join(commands[2:])
                 response = reject_issue(msg, issue, username)
             elif operator == "list":
-                response = list_issues(username)
+                if len(commands) > 1:
+                    project = commands[1]
+                else:
+                    project = None
+                response = list_issues(username, project)
             elif operator == "listall":
-                response = list_all_issues()
+                if len(commands) > 1:
+                    project = commands[1]
+                else:
+                    project = None
+                response = list_all_issues(project)
             elif operator == "listun":
-                response = list_unassigned_issues()
+                if len(commands) > 1:
+                    project = commands[1]
+                else:
+                    project = None
+                response = list_unassigned_issues(project)
             elif operator == "listfor" and len(commands) > 1:
                 listuser = commands[1]
-                response = list_issues(listuser)
+                if len(commands) > 2:
+                    project = commands[2]
+                else:
+                    project = None
+                response = list_issues(listuser, project)
             elif operator == "scrum":
                 response = daily_scrum(username)
             elif operator == "scrumfor" and len(commands) > 1:
@@ -247,10 +263,11 @@ def show_commands():
             "> `close <issue #> <comment>` - closes issue with comment\n" \
             "> `reject <issue #> <comment>` - rejects issue with comment\n" \
             "*List Commands:*\n" \
-            "> `list` - lists all open issues assigned to you\n" \
-            "> `listfor <name>` - lists all open issues assigned to `<name>`\n" \
-            "> `listall` - lists all open issues\n" \
-            "> `listun` - lists all open and unassigned issues\n" \
+            "_The `[project]` parameter is optional_\n" \
+            "> `list [project]` - lists all open issues assigned to you\n" \
+            "> `listfor <name> [project]` - lists all open issues assigned to `<name>`\n" \
+            "> `listall [project]` - lists all open issues\n" \
+            "> `listun [project]` - lists all open and unassigned issues\n" \
             "*Scrum & End of Day/Week Commands:*\n" \
             "> `scrum` - generates daily scrum for you\n" \
             "> `scrumfor <name>` - generates daily scrum for `<name>`\n" \
@@ -381,10 +398,10 @@ def create_issue_version(text, username, assigneduser, project_name, version_nam
         traceback.print_exc(file=sys.stderr)
         raise RuntimeError(":x: Issue creation failed")
 
-def list_issues(username):
+def list_issues(username, project):
     user = rm_get_user(username)
     try:
-        result = rm_get_user_issues(user.id, 'open')
+        result = rm_get_user_issues(user.id, 'open', project)
         response = ""
         if len(result) > 0:
             response = ":book: *Open Issues Assigned to "+user.firstname+" "+user.lastname+":*\n"
@@ -397,9 +414,9 @@ def list_issues(username):
         traceback.print_exc(file=sys.stderr)
         raise RuntimeError(":x: List operation failed")
 
-def list_all_issues():
+def list_all_issues(project):
     try:
-        result = rm_get_all_issues('open',False)
+        result = rm_get_all_issues('open', False, project)
         response = ""
         if len(result) > 0:
             response = ":book: *All Open Issues:*\n"
@@ -412,9 +429,9 @@ def list_all_issues():
         traceback.print_exc(file=sys.stderr)
         raise RuntimeError(":x: List all operation failed")
 
-def list_unassigned_issues():
+def list_unassigned_issues(project):
     try:
-        result = rm_get_all_issues('open',True)
+        result = rm_get_all_issues('open', True, project)
         response = ""
         if len(result) > 0:
             response = ":book: *All Open and Unassigned Issues:*\n"
@@ -583,11 +600,17 @@ def rm_get_issue(issueid):
         traceback.print_exc(file=sys.stderr)
         raise RuntimeError(":x: Failed to find issue ID `"+issueid+"` in Redmine")
 
-def rm_get_user_issues(userid, status):
+def rm_get_user_issues(userid, status, project):
+    params = dict()
     if not status:
-        status = 'open'
+        params['status_id'] = 'open'
+    else:
+        params['status_id'] = status
+    if project:
+        params['project_id'] = project
+    print project
     try:
-        return rc.issue.filter(sort='project', assigned_to_id=userid, status_id=status)
+        return rc.issue.filter(sort='project', assigned_to_id=userid, **params)
     except:
         traceback.print_exc(file=sys.stderr)
         raise RuntimeError(":x: Failed to find issues for user `"+username+"` in Redmine")
@@ -613,16 +636,22 @@ def rm_get_user_issues_week(userid, status):
         traceback.print_exc(file=sys.stderr)
         raise RuntimeError(":x: Failed to find issues for user `"+username+"` in Redmine")
 
-def rm_get_all_issues(status, unassigned):
+def rm_get_all_issues(status, unassigned, project):
+    params = dict()
     if not status:
-        status = 'open'
+        params['status_id'] = 'open'
+    else:
+        params['status_id'] = status
+    if project:
+        params['project_id'] = project
     if not unassigned:
         unassigned = False
+
     try:
         if unassigned:
-            return rc.issue.filter(sort='project', assigned_to_id='!*', status_id=status)
+            return rc.issue.filter(sort='project', assigned_to_id='!*', **params)
         else:
-            return rc.issue.filter(sort='project', status_id=status)
+            return rc.issue.filter(sort='project', **params)
     except:
         traceback.print_exc(file=sys.stderr)
         raise RuntimeError(":x: Failed to find issues for user `"+username+"` in Redmine")
