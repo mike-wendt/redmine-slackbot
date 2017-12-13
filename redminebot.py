@@ -342,7 +342,7 @@ def status_issue(text, issue, status, username):
 def close_issue(text, issue, username):
     user = rm_get_user(username)
     issue = rm_get_issue(issue)
-    today = local2utc(datetime.today()).date()
+    today = datetime.today().date()
     # impersonate user so it looks like the update is from them
     rcn = rm_impersonate(user.login)
     try:
@@ -358,7 +358,7 @@ def close_issue(text, issue, username):
 def reject_issue(text, issue, username):
     user = rm_get_user(username)
     issue = rm_get_issue(issue)
-    today = local2utc(datetime.today()).date()
+    today = datetime.today().date()
     # impersonate user so it looks like the update is from them
     rcn = rm_impersonate(user.login)
     try:
@@ -713,7 +713,7 @@ def rm_update_issue(issue, estimate, percent, notes, record, rcn, status=None, d
 
 def rm_record_time(issueid, record, rcn):
     try:
-        today = local2utc(datetime.today()).date()
+        today = datetime.today().date()
         result = rcn.time_entry.create(issue_id=issueid, spent_on=today, hours=record, activity_id=REDMINE_ACTIVITY_ID)
     except:
         traceback.print_exc(file=sys.stderr)
