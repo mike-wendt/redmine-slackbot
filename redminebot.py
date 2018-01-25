@@ -63,6 +63,7 @@ ESTIMATE_RE = re.compile(r"[$]([0-9.]+)[h]")
 RECORD_RE = re.compile(r"[!]([0-9.]+)[h]")
 PERCENT_RE = re.compile(r"[%]([0-9]{1,3})")
 HTTP_RE = re.compile(r"(\<(https?:\/\/[^\|]*)\|([^\>]*)\>)")
+SLACK_USER_RE = re.compile(r"[<][@]([A-z0-9]*)[>]")
 
 """
     Instantiate Slack & Redmine clients
@@ -306,6 +307,7 @@ def assign_issue(text, issue, username, assigneduser):
     rcn = rm_impersonate(user.login)
     try:
         (estimate, record, percent) = parse_keywords(text)
+        text = parse_usernames(text)
         rm_update_issue(issue=issue.id, notes=text, rcn=rcn, estimate=estimate, record=record, percent=percent, assigned=assigned.id)
         return ":bookmark: Assigned "+issue_subject_url(issue.id,issue.subject)+" to "+assigned.firstname+" "+assigned.lastname+comment
     except:
@@ -319,6 +321,7 @@ def update_issue(text, issue, username):
     rcn = rm_impersonate(user.login)
     try:
         (estimate, record, percent) = parse_keywords(text)
+        text = parse_usernames(text)
         rm_update_issue(issue=issue.id, notes=text, rcn=rcn, estimate=estimate, record=record, percent=percent)
         return ":memo: Updated "+issue_subject_url(issue.id,issue.subject)+" with comment `"+text+"`"
     except:
@@ -333,6 +336,7 @@ def status_issue(text, issue, status, username):
     rcn = rm_impersonate(user.login)
     try:
         (estimate, record, percent) = parse_keywords(text)
+        text = parse_usernames(text)
         rm_update_issue(issue=issue.id, notes=text, rcn=rcn, estimate=estimate, record=record, percent=percent, status=statusid)
         return ":white_check_mark: Changed status of "+issue_subject_url(issue.id,issue.subject)+" to `"+statusname+"` with comment `"+text+"`"
     except:
@@ -347,6 +351,7 @@ def close_issue(text, issue, username):
     rcn = rm_impersonate(user.login)
     try:
         (estimate, record, percent) = parse_keywords(text)
+        text = parse_usernames(text)
         if not percent:
             percent = 100
         rm_update_issue(issue=issue.id, notes=text, rcn=rcn, estimate=estimate, record=record, percent=percent, status=REDMINE_CLOSED_ID, due=today)
@@ -363,6 +368,7 @@ def reject_issue(text, issue, username):
     rcn = rm_impersonate(user.login)
     try:
         (estimate, record, percent) = parse_keywords(text)
+        text = parse_usernames(text)
         if not percent:
             percent = 100
         rm_update_issue(issue=issue.id, notes=text, rcn=rcn, estimate=estimate, record=record, percent=percent, status=REDMINE_REJECTED_ID, due=today)
@@ -379,6 +385,7 @@ def create_issue(text, username, assigneduser, project_name):
     rcn = rm_impersonate(user.login)
     try:
         (estimate, clean_text) = parse_remove_estimate(text)
+        text = parse_usernames(text)
         issue = rm_create_issue(estimate=estimate, subject=clean_text, rcn=rcn, assigned=assigned.id, project=project.identifier)
         return ":white_check_mark: Created "+issue_subject_url(issue.id,issue.subject)+" in project `"+project.name+"` assigned to "+assigned.firstname+" "+assigned.lastname
     except:
@@ -394,6 +401,7 @@ def create_issue_version(text, username, assigneduser, project_name, version_nam
     rcn = rm_impersonate(user.login)
     try:
         (estimate, clean_text) = parse_remove_estimate(text)
+        text = parse_usernames(text)
         issue = rm_create_issue(estimate=estimate, subject=clean_text, rcn=rcn, assigned=assigned.id, project=project.identifier, version=version.id)
         return ":white_check_mark: Created "+issue_subject_url(issue.id,issue.subject)+" in project `"+project.name+"` with version `"+version.name+"` assigned to "+assigned.firstname+" "+assigned.lastname
         return ""+str(version)
@@ -548,6 +556,7 @@ def create_top5(text, username, rank):
     rcn = rm_impersonate(user.login)
     try:
         (estimate, clean_text) = parse_remove_estimate(text)
+        text = parse_usernames(text)
         issue = rm_create_issue(estimate=estimate, subject=clean_text, rcn=rcn, assigned=user.id, project=REDMINE_TOP5_PROJECT, priority=priority)
         return ":white_check_mark: Created Top 5 "+issue_subject_url(issue.id,issue.subject)+" with rank `"+str(rank)+"`"
     except:
@@ -562,6 +571,7 @@ def rank_top5(text, issue, username, rank):
     rcn = rm_impersonate(user.login)
     try:
         (estimate, record, percent) = parse_keywords(text)
+        text = parse_usernames(text)
         rm_update_issue(issue=issue.id, notes=text, rcn=rcn, estimate=estimate, record=record, percent=percent, priority=priority)
         return ":memo: Updated Top 5 "+issue_subject_url(issue.id,issue.subject)+" to rank `"+str(rank)+"` with comment `"+text+"`"
     except:
@@ -877,6 +887,26 @@ def local2utc(local):
 """
     Keyword/text parsing functions
 """
+def parse_usernames(msg):
+    """
+        Parse message finding Slack user IDs and replacing them with names
+    """
+    users = re.finditer(SLACK_USER_RE, msg)
+    slack_users = sc.api_call("users.list")
+
+    for user in users:
+        userid = user.group(1)
+        username = lookup_slack_username(slack_users, userid)
+        msg = msg.replace("<@"+userid+">", "@"+username)
+
+    return msg
+
+def lookup_slack_username(slack_users, userid):
+    for user in slack_users['members']:
+        if userid == user['id']:
+            return user['name']
+    return "UNKNOWN"
+
 def parse_keywords(msg):
     """
         Parse message finding keywords starting with '!', '$' followed by a number
