@@ -194,6 +194,9 @@ def handle_command(command, channel, user, username):
                 response = rank_top5(msg, issue, username, rank)
             elif operator == "help":
                 response = show_commands()
+            elif operator == "sum" and len(commands) > 1:
+                issue = commands[1]
+                response = summarize_issue(issue)
             elif int(commands[0]) > 0:
                 issue = int(commands[0])
                 response = link_issue(issue)
@@ -248,8 +251,9 @@ def show_commands():
         Return ist of commands that bot can handle
     """
     return ":hammer_and_wrench: *List of supported commands:*\n" \
-            "*Issue Link Command:*\n" \
+            "*Issue Info Commands:*\n" \
             "> `<issue #>` - returns a link to the referenced issue number\n" \
+            "> `sum <issue #>` - returns a detailed summary of the issue\n" \
             "*Issue Commands:*\n" \
             "> `issue <subject>` - creates new issue assigned to you\n" \
             "> `issueto <name> <subject>` - creates new issue assigned to `<name>`\n" \
@@ -295,6 +299,17 @@ def show_commands():
 def link_issue(issue):
     issue = rm_get_issue(issue)
     return ":mag: "+issue_subject_url(issue.id,issue.subject)
+
+def summarize_issue(issue):
+    issue = rm_get_issue(issue)
+    try:
+        response = ":bulb: *Issue Summary:*\n"
+        response += issue_detail(issue, extended=True, user=True)
+        response += issue_journal_details(issue)
+        return response
+    except:
+        traceback.print_exc(file=sys.stderr)
+        raise RuntimeError(":x: Summarize operation failed")
 
 def assign_issue(text, issue, username, assigneduser):
     user = rm_get_user(username)
@@ -747,6 +762,23 @@ def rm_get_top5(userid, priority):
         traceback.print_exc(file=sys.stderr)
         raise RuntimeError(":x: Failed to find Top 5 for user `"+username+"` in Redmine")
 
+def rm_get_statuses():
+    try:
+        return rc.issue_status.all()
+    except:
+        traceback.print_exc(file=sys.stderr)
+        raise RuntimeError(":x: Failed to issue statuses from Redmine")
+
+def rm_get_status(statusid):
+    try:
+        for status in rm_get_statuses():
+            if status.id == statusid:
+                return status.name
+    except:
+        traceback.print_exc(file=sys.stderr)
+        raise RuntimeError(":x: Failed to find issue status ID `"+statusid+"` in Redmine")
+
+
 """
     Status functions
 """
@@ -767,6 +799,12 @@ def list_statuses():
     for i in STATUSES:
         response += "`"+i+"` - "+STATUSES[i][1]+"\n"
     return response
+
+def lookup_status(status):
+    if status in STATUS_NAME_LOOKUP:
+        return STATUS_NAME_LOOKUP[status]
+    else:
+        return rm_get_status(status)
 
 """
     Response formatting functions
@@ -844,15 +882,83 @@ def issue_status(issue):
 def issue_detail(issue, extended=False, user=False):
     version = issue_version(issue)
     tag = issue_tag(issue.created_on, issue.updated_on)
-    username = issue_user(issue)
     response = "> "+tag+" *"+issue.project.name+version+"* "+ \
                issue_subject_url(issue.id, issue.subject)
     if extended:
         response += issue_time_percent_details(issue)
     if user:
+        username = issue_user(issue)
         response += username
 
     response += "\n"
+    return response
+
+def issue_detail_hours(issue, spent):
+    version = issue_version(issue)
+    tag = issue_tag(issue.created_on, issue.updated_on)
+    response = "> "+tag+" _| "+str(spent)+"h |_ *"+issue.project.name+version+"* "+ \
+               issue_subject_url(issue.id, issue.subject)
+    response += issue_time_percent_details(issue)
+
+    response += "\n"
+    return response
+
+def issue_journal_details(issue):
+    journals = rc.issue.get(issue.id, include='journals')
+    cnt = 1
+    response = ""
+    for je in journals.journals:
+        notes = je.notes
+        commenter = je.user.name
+        posted = utc2local(je.created_on)
+        changes = ""
+        if je.details:
+            for detail in je.details:
+                old = ""
+                new = ""
+                change = ""
+
+                if detail['name'] == "status_id":
+                    change = "Status"
+                    old = lookup_status(detail['old_value'])
+                    new = lookup_status(detail['new_value'])
+                elif detail['name'] == "subject":
+                    change = "Subject"
+                elif detail['name'] == "done_ratio":
+                    change = "Percent Done"
+                    old = str(detail['old_value'])+"%"
+                    new = str(detail['new_value'])+"%"
+                elif detail['name'] == "project_id":
+                    change = "Project"
+                    old = rm_get_project(detail['old_value']).name
+                    new = rm_get_project(detail['new_value']).name
+                elif detail['name'] == "start_date":
+                    change = "Start Date"
+                elif detail['name'] == "due_date":
+                    change = "Due Date"
+                elif detail['name'] == "description":
+                    change = "Description"
+                elif detail['name'] == "estimated_hours":
+                    change = "Estimated Hours"
+                else:
+                    change = detail['name']
+
+                if 'old_value' in detail and old == "":
+                    old = " from `"+str(detail['old_value'])+"`"
+                elif old != "":
+                    old = " from `"+old+"`"
+                if 'new_value' in detail and new == "":
+                    new = " to `"+str(detail['new_value'])+"`"
+                elif new != "":
+                    new = " to `"+new+"`"
+
+                changes += "_Changed `"+change+"`"+old+new+"_ "
+
+        if len(notes) > 0:
+            notes = ">                "+notes+"\n"
+
+        response += ">         #"+str(cnt)+" *"+commenter+" - "+str(posted)+"* "+changes+"\n"+notes
+        cnt += 1
     return response
 
 def top5_detail(issue, rank, cnt=None):
