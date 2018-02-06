@@ -138,6 +138,11 @@ def handle_command(command, channel, user, username):
                 issue = commands[1]
                 msg = s.join(commands[2:])
                 response = reject_issue(msg, issue, username)
+            elif operator == "rank" and len(commands) > 3:
+                issue = commands[1]
+                rank = commands[2]
+                msg = s.join(commands[3:])
+                response = rank_issue(msg, issue, username, rank)
             elif operator == "list":
                 if len(commands) > 1:
                     project = commands[1]
@@ -267,6 +272,7 @@ def show_commands():
             ">\t`<status>` must be one of the following: "+list_status_keys()+"\n" \
             "> `close <issue #> <comment>` - closes issue with comment\n" \
             "> `reject <issue #> <comment>` - rejects issue with comment\n" \
+            "> `rank <issue #> <rank> <comment>` - changes the issue to `<rank>` (1-5) with comment\n" \
             "*List Commands:*\n" \
             "_The `[project]` parameter is optional_\n" \
             "> `list [project]` - lists all open issues assigned to you\n" \
@@ -424,6 +430,21 @@ def create_issue_version(text, username, assigneduser, project_name, version_nam
         traceback.print_exc(file=sys.stderr)
         raise RuntimeError(":x: Issue creation failed")
 
+def rank_issue(text, issue, username, rank):
+    user = rm_get_user(username)
+    issue = rm_get_issue(issue)
+    priority = parse_rank(rank)
+    # impersonate user so it looks like the update is from them
+    rcn = rm_impersonate(user.login)
+    try:
+        (estimate, record, percent) = parse_keywords(text)
+        text = parse_usernames(text)
+        rm_update_issue(issue=issue.id, notes=text, rcn=rcn, estimate=estimate, record=record, percent=percent, priority=priority)
+        return ":memo: Updated "+issue_subject_url(issue.id,issue.subject)+" to rank `"+str(rank)+"` with comment `"+text+"`"
+    except:
+        traceback.print_exc(file=sys.stderr)
+        raise RuntimeError(":x: Issue rank update failed")
+
 def list_issues(username, project):
     user = rm_get_user(username)
     try:
@@ -494,20 +515,53 @@ def daily_eod(username):
     try:
         response = ":newspaper: *End of Day Report for "+user.firstname+" "+user.lastname+":*\n"
         issues_found = False
+        time_entries = rm_sum_time_entries_user_today(user.id)
+        total_hours = 0.0
         for s in EOD_ORDER:
             result = rm_get_user_issues_today(user.id, s)
             if len(result) > 0:
+                hours_spent = 0.0
+                issue_details = ""
                 issues_found = True
-                response += "*_"+STATUS_NAME_LOOKUP[s]+" ("+str(len(result))+")_*\n"
                 for issue in result:
-                    response += issue_detail(issue, extended=True, user=False)
+                    if issue.id in time_entries:
+                        issue_details += issue_detail_hours(issue, time_entries[issue.id])
+                        hours_spent += time_entries[issue.id]
+                        del time_entries[issue.id]
+                    else:
+                        issue_details += issue_detail(issue, extended=True, user=False)
+                response += "*_"+lookup_status(s)+" ("+str(len(result))+") Hours: "+str(hours_spent)+"_*\n"
+                response += issue_details
+                total_hours += hours_spent
         for s in SCRUM_ORDER:
             result = rm_get_user_issues(user.id, s)
             if len(result) > 0:
+                hours_spent = 0.0
+                issue_details = ""
                 issues_found = True
-                response += "*_"+STATUS_NAME_LOOKUP[s]+" ("+str(len(result))+")_*\n"
                 for issue in result:
-                    response += issue_detail(issue, extended=True, user=False)
+                    if issue.id in time_entries:
+                        issue_details += issue_detail_hours(issue, time_entries[issue.id])
+                        hours_spent += time_entries[issue.id]
+                        del time_entries[issue.id]
+                    else:
+                        issue_details += issue_detail(issue, extended=True, user=False)
+                response += "*_"+lookup_status(s)+" ("+str(len(result))+") Hours: "+str(hours_spent)+"_*\n"
+                response += issue_details
+                total_hours += hours_spent
+        if len(time_entries) > 0:
+            # Remaining issues that were contributed to
+            issues_found = True
+            contribution_hours = 0.0
+            issue_details = ""
+            for issueid in time_entries:
+                contribution_hours += time_entries[issueid]
+                issue = rm_get_issue(issueid)
+                issue_details += issue_detail_hours(issue, time_entries[issueid])
+            response += "*_Contributions ("+str(len(time_entries))+") Hours: "+str(contribution_hours)+"_*\n"
+            response += issue_details
+            total_hours += contribution_hours
+        response += "*_Total Hours: "+str(total_hours)+"_*\n"
         if not issues_found:
             response += ":thumbsup_all: No issues found!\n"
         return response
@@ -520,20 +574,53 @@ def weekly_eow(username):
     try:
         response = ":newspaper: *End of Week Report for "+user.firstname+" "+user.lastname+":*\n"
         issues_found = False
+        time_entries = rm_sum_time_entries_user_week(user.id)
+        total_hours = 0.0
         for s in EOD_ORDER:
             result = rm_get_user_issues_week(user.id, s)
             if len(result) > 0:
+                hours_spent = 0.0
+                issue_details = ""
                 issues_found = True
-                response += "*_"+STATUS_NAME_LOOKUP[s]+" ("+str(len(result))+")_*\n"
                 for issue in result:
-                    response += issue_detail(issue, extended=True, user=False)
+                    if issue.id in time_entries:
+                        issue_details += issue_detail_hours(issue, time_entries[issue.id])
+                        hours_spent += time_entries[issue.id]
+                        del time_entries[issue.id]
+                    else:
+                        issue_details += issue_detail(issue, extended=True, user=False)
+                response += "*_"+lookup_status(s)+" ("+str(len(result))+") Hours: "+str(hours_spent)+"_*\n"
+                response += issue_details
+                total_hours += hours_spent
         for s in SCRUM_ORDER:
             result = rm_get_user_issues(user.id, s)
             if len(result) > 0:
+                hours_spent = 0.0
+                issue_details = ""
                 issues_found = True
-                response += "*_"+STATUS_NAME_LOOKUP[s]+" ("+str(len(result))+")_*\n"
                 for issue in result:
-                    response += issue_detail(issue, extended=True, user=False)
+                    if issue.id in time_entries:
+                        issue_details += issue_detail_hours(issue, time_entries[issue.id])
+                        hours_spent += time_entries[issue.id]
+                        del time_entries[issue.id]
+                    else:
+                        issue_details += issue_detail(issue, extended=True, user=False)
+                response += "*_"+lookup_status(s)+" ("+str(len(result))+") Hours: "+str(hours_spent)+"_*\n"
+                response += issue_details
+                total_hours += hours_spent
+        if len(time_entries) > 0:
+            # Remaining issues that were contributed to
+            issues_found = True
+            contribution_hours = 0.0
+            issue_details = ""
+            for issueid in time_entries:
+                contribution_hours += time_entries[issueid]
+                issue = rm_get_issue(issueid)
+                issue_details += issue_detail_hours(issue, time_entries[issueid])
+            response += "*_Contributions ("+str(len(time_entries))+") Hours: "+str(contribution_hours)+"_*\n"
+            response += issue_details
+            total_hours += contribution_hours
+        response += "*_Total Hours: "+str(total_hours)+"_*\n"
         if not issues_found:
             response += ":thumbsup_all: No issues found!\n"
         return response
@@ -628,7 +715,7 @@ def rm_get_issue(issueid):
         traceback.print_exc(file=sys.stderr)
         raise RuntimeError(":x: Failed to find issue ID `"+issueid+"` in Redmine")
 
-def rm_get_user_issues(userid, status, project):
+def rm_get_user_issues(userid, status, project=None):
     params = dict()
     if not status:
         params['status_id'] = 'open'
@@ -637,7 +724,7 @@ def rm_get_user_issues(userid, status, project):
     if project:
         params['project_id'] = project
     try:
-        return rc.issue.filter(sort='project', assigned_to_id=userid, **params)
+        return rc.issue.filter(sort='priority:desc', assigned_to_id=userid, **params)
     except:
         traceback.print_exc(file=sys.stderr)
         raise RuntimeError(":x: Failed to find issues for user `"+username+"` in Redmine")
@@ -647,7 +734,7 @@ def rm_get_user_issues_today(userid, status):
         status = 'open'
     try:
         today = datetime.today().date()
-        return rc.issue.filter(sort='project', assigned_to_id=userid, status_id=status, updated_on=today)
+        return rc.issue.filter(sort='priority:desc', assigned_to_id=userid, status_id=status, updated_on=today)
     except:
         traceback.print_exc(file=sys.stderr)
         raise RuntimeError(":x: Failed to find issues for user `"+username+"` in Redmine")
@@ -658,7 +745,16 @@ def rm_get_user_issues_week(userid, status):
     try:
         today = datetime.today().date()
         last_week = (datetime.today() - timedelta(days=7)).date()
-        return rc.issue.filter(sort='project', assigned_to_id=userid, status_id=status, updated_on='><'+str(last_week)+'|'+str(today))
+        return rc.issue.filter(sort='priority:desc', assigned_to_id=userid, status_id=status, updated_on='><'+str(last_week)+'|'+str(today))
+    except:
+        traceback.print_exc(file=sys.stderr)
+        raise RuntimeError(":x: Failed to find issues for user `"+username+"` in Redmine")
+
+def rm_get_user_issues_date(userid, status, date):
+    if not status:
+        status = 'open'
+    try:
+        return rc.issue.filter(sort='priority:desc', assigned_to_id=userid, status_id=status, updated_on=date)
     except:
         traceback.print_exc(file=sys.stderr)
         raise RuntimeError(":x: Failed to find issues for user `"+username+"` in Redmine")
@@ -676,9 +772,9 @@ def rm_get_all_issues(status, unassigned, project):
 
     try:
         if unassigned:
-            return rc.issue.filter(sort='project', assigned_to_id='!*', **params)
+            return rc.issue.filter(sort='priority:desc', assigned_to_id='!*', **params)
         else:
-            return rc.issue.filter(sort='project', **params)
+            return rc.issue.filter(sort='priority:desc', **params)
     except:
         traceback.print_exc(file=sys.stderr)
         raise RuntimeError(":x: Failed to find issues for user `"+username+"` in Redmine")
@@ -754,6 +850,30 @@ def rm_sum_time_entries(issueid):
     except:
         traceback.print_exc(file=sys.stderr)
         raise RuntimeError(":x: Failed in summing time entries")
+
+def rm_get_time_entries_user(userid, fromdate):
+    try:
+        return rc.time_entry.filter(user_id=userid, from_date=fromdate)
+    except:
+        traceback.print_exc(file=sys.stderr)
+        raise RuntimeError(":x: Failed to find time entries for `"+username+"` in Redmine")
+
+def rm_sum_time_entries_user(userid, fromdate):
+    results = {}
+    for e in rm_get_time_entries_user(userid, fromdate):
+        if e.issue.id in results:
+            results[e.issue.id] += e.hours
+        else:
+            results[e.issue.id] = e.hours
+    return results
+
+def rm_sum_time_entries_user_today(userid):
+    today = datetime.today().date()
+    return rm_sum_time_entries_user(userid, today)
+
+def rm_sum_time_entries_user_week(userid):
+    last_week = (datetime.today() - timedelta(days=7)).date()
+    return rm_sum_time_entries_user(userid, last_week)
 
 def rm_get_top5(userid, priority):
     try:
@@ -879,10 +999,33 @@ def issue_top5_user(issue):
 def issue_status(issue):
     return "*"+issue.status.name+"*"
 
+def issue_rank(issue):
+    priority = issue.priority.id
+    rank = int(6-priority)
+    rank = issue_rank_tag(rank)
+    return ""+rank+""
+
+def issue_rank_tag(rank):
+    tag = ""
+    if rank == 1:
+        tag = ":one:"
+    elif rank == 2:
+        tag = ":two:"
+    elif rank == 3:
+        tag = ":three:"
+    elif rank == 4:
+        tag = ":four:"
+    elif rank == 5:
+        tag = ":five:"
+    else:
+        tag = ":question:"
+    return tag
+
 def issue_detail(issue, extended=False, user=False):
     version = issue_version(issue)
     tag = issue_tag(issue.created_on, issue.updated_on)
-    response = "> "+tag+" *"+issue.project.name+version+"* "+ \
+    rank = issue_rank(issue)
+    response = "> "+tag+" "+rank+" *"+issue.project.name+version+"* "+ \
                issue_subject_url(issue.id, issue.subject)
     if extended:
         response += issue_time_percent_details(issue)
@@ -896,7 +1039,8 @@ def issue_detail(issue, extended=False, user=False):
 def issue_detail_hours(issue, spent):
     version = issue_version(issue)
     tag = issue_tag(issue.created_on, issue.updated_on)
-    response = "> "+tag+" _| "+str(spent)+"h |_ *"+issue.project.name+version+"* "+ \
+    rank = issue_rank(issue)
+    response = "> "+tag+" "+rank+" _| "+str(spent)+"h |_ *"+issue.project.name+version+"* "+ \
                issue_subject_url(issue.id, issue.subject)
     response += issue_time_percent_details(issue)
 
@@ -965,10 +1109,10 @@ def top5_detail(issue, rank, cnt=None):
     tag = issue_tag(issue.created_on, issue.updated_on)
     username = issue_top5_user(issue)
 
-    rank_out = str(rank)
+    rank_out = issue_rank_tag(rank)
     if cnt:
         rank_out += "."+str(cnt)
-    rank_out += ") "
+    rank_out += " "
 
     response = "> "+tag+" "+rank_out+" "+issue_status(issue)+" "+ \
                issue_subject_url(issue.id, issue.subject)+" "+ \
