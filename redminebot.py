@@ -87,6 +87,8 @@ def handle_command(command, channel, user, username):
             operator = commands[0].lower()
             s = " "
             msg = s.join(commands[1:])
+            # check that user exists --> authorized
+            rm_get_user(username)
             if operator == "issueto" and len(commands) > 2:
                 assigneduser = commands[1]
                 msg = s.join(commands[2:])
