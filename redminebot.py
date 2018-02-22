@@ -226,11 +226,15 @@ def parse_slack_output(slack_rtm_output):
                 try:
                     user = output['user']
                     profile = sc.api_call("users.info", user=output['user'])
-                    # username used for searching in redmine; try last,
-                    # then first, then display
+                    # username used for searching in redmine; try last/first,
+                    # then first, then display, then username
+
                     if 'last_name' in profile['user']['profile'] \
-                      and profile['user']['profile']['last_name'] != '':
-                        username = profile['user']['profile']['last_name']
+                      and profile['user']['profile']['last_name'] != '' \
+                      and 'first_name' in profile['user']['profile'] \
+                      and profile['user']['profile']['first_name'] != '':
+                        username = profile['user']['profile']['first_name'] + \
+                                   " " + profile['user']['profile']['last_name']
                     elif 'first_name' in profile['user']['profile'] \
                       and profile['user']['profile']['first_name'] != '':
                         username = profile['user']['profile']['first_name']
