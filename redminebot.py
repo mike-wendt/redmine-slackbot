@@ -227,30 +227,40 @@ def parse_slack_output(slack_rtm_output):
             if output and 'text' in output and AT_BOT in output['text']:
                 try:
                     user = output['user']
+                    username = ''
+                    name = ''
                     profile = sc.api_call("users.info", user=output['user'])
                     # username used for searching in redmine; try last/first,
-                    # then first, then display, then username
+                    # then last, first, display, username
 
                     if 'last_name' in profile['user']['profile'] \
                       and profile['user']['profile']['last_name'] != '' \
                       and 'first_name' in profile['user']['profile'] \
                       and profile['user']['profile']['first_name'] != '':
-                        username = profile['user']['profile']['first_name'] + \
+                        name = profile['user']['profile']['first_name'] + \
                                    " " + profile['user']['profile']['last_name']
-                    elif 'first_name' in profile['user']['profile'] \
+                        username = rm_check_username(name)
+                    if username == '' and 'last_name' in profile['user']['profile'] \
+                      and profile['user']['profile']['last_name'] != '':
+                        name = profile['user']['profile']['last_name']
+                        username = rm_check_username(name)
+                    if username == '' and 'first_name' in profile['user']['profile'] \
                       and profile['user']['profile']['first_name'] != '':
-                        username = profile['user']['profile']['first_name']
-                    elif 'display_name' in profile['user']['profile'] \
+                        name = profile['user']['profile']['first_name']
+                        username = rm_check_username(name)
+                    if username == '' and 'display_name' in profile['user']['profile'] \
                       and profile['user']['profile']['display_name'] != '':
-                        username = profile['user']['profile']['display_name']
-                    else:
-                        username = profile['user']['name']
+                        name = profile['user']['profile']['display_name']
+                        username = rm_check_username(name)
+                    if username == '' and 'name' in profile['user']:
+                        name = profile['user']['name']
+                        username = rm_check_username(name)
                     # return text after the @ mention, whitespace removed
                     return output['text'].split(AT_BOT)[1].strip(), \
                            output['channel'], user, username
                 except:
                     traceback.print_exc(file=sys.stderr)
-                    raise RuntimeError(":x: Unable to find `"+user \
+                    raise RuntimeError(":x: Unable to find `"+name \
                                        +"` in Redmine")
     return None, None, None, None
 
@@ -695,6 +705,16 @@ def rm_get_user(username):
     except:
         traceback.print_exc(file=sys.stderr)
         raise RuntimeError(":x: Failed to find user `"+username+"` in Redmine")
+
+def rm_check_username(username):
+    try:
+        search = rc.user.filter(name=username)[0]
+        if search:
+            return username
+        else:
+            return ''
+    except:
+        return ''
 
 def rm_get_project(project):
     try:
