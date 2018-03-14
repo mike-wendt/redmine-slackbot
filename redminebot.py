@@ -81,7 +81,7 @@ def handle_command(command, channel, user, username):
         returns back what it needs for clarification.
     """
     response = ":question: Unknown/invalid command - Try `help` for a list of supported commands"
-    commands = command.split()
+    commands = command.split(' ')
     try:
         if commands:
             operator = commands[0].lower()
@@ -360,7 +360,7 @@ def update_issue(text, issue, username):
         (estimate, record, percent) = parse_keywords(text)
         text = parse_usernames(text)
         rm_update_issue(issue=issue.id, notes=text, rcn=rcn, estimate=estimate, record=record, percent=percent)
-        return ":memo: Updated "+issue_subject_url(issue.id,issue.subject)+" with comment `"+text+"`"
+        return ":memo: Updated "+issue_subject_url(issue.id,issue.subject)+" with comment \n"+issue_comment(text)
     except:
         traceback.print_exc(file=sys.stderr)
         raise RuntimeError(":x: Issue update failed")
@@ -375,7 +375,7 @@ def status_issue(text, issue, status, username):
         (estimate, record, percent) = parse_keywords(text)
         text = parse_usernames(text)
         rm_update_issue(issue=issue.id, notes=text, rcn=rcn, estimate=estimate, record=record, percent=percent, status=statusid)
-        return ":white_check_mark: Changed status of "+issue_subject_url(issue.id,issue.subject)+" to `"+statusname+"` with comment `"+text+"`"
+        return ":white_check_mark: Changed status of "+issue_subject_url(issue.id,issue.subject)+" to `"+statusname+"` with comment \n"+issue_comment(text)
     except:
         traceback.print_exc(file=sys.stderr)
         raise RuntimeError(":x: Issue status update failed")
@@ -392,7 +392,7 @@ def close_issue(text, issue, username):
         if not percent:
             percent = 100
         rm_update_issue(issue=issue.id, notes=text, rcn=rcn, estimate=estimate, record=record, percent=percent, status=REDMINE_CLOSED_ID, due=today)
-        return ":white_check_mark: Closed "+issue_subject_url(issue.id,issue.subject)+" with comment `"+text+"`"
+        return ":white_check_mark: Closed "+issue_subject_url(issue.id,issue.subject)+" with comment \n"+issue_comment(text)
     except:
         traceback.print_exc(file=sys.stderr)
         raise RuntimeError(":x: Issue closing failed")
@@ -409,7 +409,7 @@ def reject_issue(text, issue, username):
         if not percent:
             percent = 100
         rm_update_issue(issue=issue.id, notes=text, rcn=rcn, estimate=estimate, record=record, percent=percent, status=REDMINE_REJECTED_ID, due=today)
-        return ":white_check_mark: Rejected "+issue_subject_url(issue.id,issue.subject)+" with comment `"+text+"`"
+        return ":white_check_mark: Rejected "+issue_subject_url(issue.id,issue.subject)+" with comment \n"+issue_comment(text)
     except:
         traceback.print_exc(file=sys.stderr)
         raise RuntimeError(":x: Issue rejecting failed")
@@ -456,7 +456,7 @@ def rank_issue(text, issue, username, rank):
         (estimate, record, percent) = parse_keywords(text)
         text = parse_usernames(text)
         rm_update_issue(issue=issue.id, notes=text, rcn=rcn, estimate=estimate, record=record, percent=percent, priority=priority)
-        return ":memo: Updated "+issue_subject_url(issue.id,issue.subject)+" to rank `"+str(rank)+"` with comment `"+text+"`"
+        return ":memo: Updated "+issue_subject_url(issue.id,issue.subject)+" to rank `"+str(rank)+"` with comment \n"+issue_comment(text)
     except:
         traceback.print_exc(file=sys.stderr)
         raise RuntimeError(":x: Issue rank update failed")
@@ -691,7 +691,7 @@ def rank_top5(text, issue, username, rank):
         (estimate, record, percent) = parse_keywords(text)
         text = parse_usernames(text)
         rm_update_issue(issue=issue.id, notes=text, rcn=rcn, estimate=estimate, record=record, percent=percent, priority=priority)
-        return ":memo: Updated Top 5 "+issue_subject_url(issue.id,issue.subject)+" to rank `"+str(rank)+"` with comment `"+text+"`"
+        return ":memo: Updated Top 5 "+issue_subject_url(issue.id,issue.subject)+" to rank `"+str(rank)+"` with comment \n"+issue_comment(text)
     except:
         traceback.print_exc(file=sys.stderr)
         raise RuntimeError(":x: Top 5 rank update failed")
@@ -1146,6 +1146,18 @@ def top5_detail(issue, rank, cnt=None):
 
     response += "\n"
     return response
+
+def issue_comment(text):
+    comment = ""
+    code_block = False
+    for line in text.split('\n'):
+        if not code_block:
+            comment += "> "+line+"\n"
+        else:
+            comment += line+"\n"
+        if "```" in line:
+            code_block = not code_block
+    return comment
 
 """
     Time conversion helper functions
