@@ -337,7 +337,7 @@ def assign_issue(text, issue, username, assigneduser):
     user = rm_get_user(username)
     assigned = rm_get_user(assigneduser)
     issue = rm_get_issue(issue)
-    comment = " with comment `"+text+"`"
+    comment = " with comment \n"+issue_comment(text)
     if text == "":
         comment = ""
     # impersonate user so it looks like the update is from them
