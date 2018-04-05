@@ -327,6 +327,7 @@ def summarize_issue(issue):
     try:
         response = ":bulb: *Issue Summary:*\n"
         response += issue_detail(issue, extended=True, user=True, description=True)
+        response += "*Changes:*\n"
         response += issue_journal_details(issue)
         return response
     except:
