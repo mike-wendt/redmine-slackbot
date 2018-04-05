@@ -1113,6 +1113,12 @@ def issue_journal_details(issue):
                     change = "Description"
                 elif detail['name'] == "estimated_hours":
                     change = "Estimated Hours"
+                elif detail['name'] == "priority_id":
+                    change = "Priority"
+                    old = str(priority_to_rank(detail['old_value']))
+                    new = str(priority_to_rank(detail['new_value']))
+                elif detail['name'] == "tracker_id":
+                    change = "Tracker"
                 else:
                     change = detail['name']
 
