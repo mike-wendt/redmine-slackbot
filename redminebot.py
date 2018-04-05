@@ -1028,7 +1028,7 @@ def issue_status(issue):
 
 def issue_rank(issue):
     priority = issue.priority.id
-    rank = int(6-priority)
+    rank = priority_to_rank(priority)
     rank = issue_rank_tag(rank)
     return ""+rank+""
 
@@ -1301,6 +1301,9 @@ def parse_rank(rank):
 """
 def check_key_exists(target, key):
     return [tup for tup in target if tup[0] == key]
+
+def priority_to_rank(priority):
+    return int(6-int(priority))
 
 """
     Main
