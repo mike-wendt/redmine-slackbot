@@ -326,7 +326,7 @@ def summarize_issue(issue):
     issue = rm_get_issue(issue)
     try:
         response = ":bulb: *Issue Summary:*\n"
-        response += issue_detail(issue, extended=True, user=True)
+        response += issue_detail(issue, extended=True, user=True, description=True)
         response += issue_journal_details(issue)
         return response
     except:
@@ -1047,7 +1047,7 @@ def issue_rank_tag(rank):
         tag = ":question:"
     return tag
 
-def issue_detail(issue, extended=False, user=False):
+def issue_detail(issue, extended=False, user=False, description=False):
     version = issue_version(issue)
     tag = issue_tag(issue.created_on, issue.updated_on)
     rank = issue_rank(issue)
@@ -1058,8 +1058,10 @@ def issue_detail(issue, extended=False, user=False):
     if user:
         username = issue_user(issue)
         response += username
-
-    response += "\n"
+    if description and issue.description != "":
+        response += "\n*Description:*\n"+issue_comment(issue.description)
+    else:
+        response += "\n"
     return response
 
 def issue_detail_hours(issue, spent):
