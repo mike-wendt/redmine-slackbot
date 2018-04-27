@@ -729,6 +729,13 @@ def rm_get_user(username):
         traceback.print_exc(file=sys.stderr)
         raise RuntimeError(":x: Failed to find user `"+username+"` in Redmine")
 
+def rm_get_user_by_id(userid):
+    try:
+        return rc.user.get(int(userid))
+    except:
+        traceback.print_exc(file=sys.stderr)
+        raise RuntimeError(":x: Failed to find user ID `"+userid+"` in Redmine")
+
 def rm_check_username(username):
     try:
         search = rc.user.filter(name=username)[0]
@@ -1149,6 +1156,12 @@ def issue_journal_details(issue):
                     new = str(priority_to_rank(detail['new_value']))
                 elif detail['name'] == "tracker_id":
                     change = "Tracker"
+                elif detail['name'] == "assigned_to_id":
+                    change = "Assigned"
+                    old_user = rm_get_user_by_id(detail['old_value'])
+                    old = old_user.firstname+" "+old_user.lastname
+                    new_user = rm_get_user_by_id(detail['new_value'])
+                    new = new_user.firstname+" "+new_user.lastname
                 else:
                     change = detail['name']
 
