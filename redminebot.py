@@ -205,6 +205,22 @@ def handle_command(command, channel, user, username):
             elif operator == "sum" and len(commands) > 1:
                 issue = commands[1]
                 response = summarize_issue(issue)
+            elif operator == "wadd" and len(commands) > 2:
+                issue = commands[1]
+                watcher = commands[2]
+                if len(commands) > 3:
+                    msg = s.join(commands[3:])
+                else:
+                    msg = ""
+                response = cmd_watcher_add(msg, issue, username, watcher)
+            elif operator == "wdel" and len(commands) > 2:
+                issue = commands[1]
+                watcher = commands[2]
+                if len(commands) > 3:
+                    msg = s.join(commands[3:])
+                else:
+                    msg = ""
+                response = cmd_watcher_delete(msg, issue, username, watcher)
             elif int(commands[0]) > 0:
                 issue = int(commands[0])
                 response = link_issue(issue)
@@ -290,6 +306,9 @@ def show_commands():
             "> `close <issue #> <comment>` - closes issue with comment\n" \
             "> `reject <issue #> <comment>` - rejects issue with comment\n" \
             "> `rank <issue #> <rank> <comment>` - changes the issue to `<rank>` (1-5) with comment\n" \
+            "*Watcher Commands:*\n" \
+            "> `wadd <issue #> <name> [comment]` - adds `<name>` to issue as a watcher\n" \
+            "> `wdel <issue #> <name> [comment]` - removes `<name>` from issue as a watcher\n" \
             "*List Commands:*\n" \
             "_The `[project]` parameter is optional_\n" \
             "> `list [project]` - lists all open issues assigned to you\n" \
@@ -721,6 +740,58 @@ def rank_top5(text, issue, username, rank):
     except:
         traceback.print_exc(file=sys.stderr)
         raise RuntimeError(":x: Top 5 rank update failed")
+
+### Watcher commands
+
+def cmd_watcher_add(text, issueid, username, watchername):
+    user = rm_get_user(username)
+    issue = rm_get_issue(issueid)
+    watcher = rm_get_user(watchername)
+    comment = ""
+    if text != "":
+        comment = " with comment \n"+issue_comment(text)
+    # impersonate user so it looks like the action is from them
+    rcn = rm_impersonate(user.login)
+    try:
+        (estimate, record, percent) = parse_keywords(text)
+        text = parse_usernames(text)
+        issue.watcher.add(watcher.id)
+        # log action as a comment
+        log = "> _"+user.firstname+" "+user.lastname+"_ added _"+watcher.firstname+" "+watcher.lastname+"_ as a watcher"
+        if text != "":
+            text = log+"\n\n"+text
+        else:
+            text = log
+        rm_update_issue(issue=issue.id, notes=text, rcn=rcn, estimate=estimate, record=record, percent=percent)
+        return ":eyes: Added _"+watcher.firstname+" "+watcher.lastname+"_ as watcher to "+issue_subject_url(issue.id,issue.subject)+comment
+    except:
+        traceback.print_exc(file=sys.stderr)
+        raise RuntimeError(":x: Watcher addition failed")
+
+def cmd_watcher_delete(text, issueid, username, watchername):
+    user = rm_get_user(username)
+    issue = rm_get_issue(issueid)
+    watcher = rm_get_user(watchername)
+    comment = ""
+    if text != "":
+        comment = " with comment \n"+issue_comment(text)
+    # impersonate user so it looks like the action is from them
+    rcn = rm_impersonate(user.login)
+    try:
+        (estimate, record, percent) = parse_keywords(text)
+        text = parse_usernames(text)
+        issue.watcher.remove(watcher.id)
+        # log action as a comment
+        log = "> _"+user.firstname+" "+user.lastname+"_ removed _"+watcher.firstname+" "+watcher.lastname+"_ as a watcher"
+        if text != "":
+            text = log+"\n\n"+text
+        else:
+            text = log
+        rm_update_issue(issue=issue.id, notes=text, rcn=rcn, estimate=estimate, record=record, percent=percent)
+        return ":eyes: Removed _"+watcher.firstname+" "+watcher.lastname+"_ as watcher from "+issue_subject_url(issue.id,issue.subject)+comment
+    except:
+        traceback.print_exc(file=sys.stderr)
+        raise RuntimeError(":x: Watcher deletion failed")
 
 """
     Redmine functions
