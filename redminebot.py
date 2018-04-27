@@ -1143,6 +1143,7 @@ def issue_journal_details(issue):
 def top5_detail(issue, rank, cnt=None):
     tag = issue_tag(issue.created_on, issue.updated_on)
     username = issue_top5_user(issue)
+    watchers = issue_watchers(issue)
 
     rank_out = issue_rank_tag(rank)
     if cnt:
@@ -1151,7 +1152,7 @@ def top5_detail(issue, rank, cnt=None):
 
     response = "> "+tag+" "+rank_out+" "+issue_status(issue)+" "+ \
                issue_subject_url(issue.id, issue.subject)+" "+ \
-               issue_time_percent_details(issue) + username
+               issue_time_percent_details(issue) + username + watchers
 
     response += "\n"
     return response
@@ -1170,6 +1171,17 @@ def issue_comment(text):
 
 def issue_project(project):
     return "`"+project.name+" ("+project.identifier+")`"
+
+def issue_watchers(issue):
+    watchers = ""
+    for watcher in issue.watchers:
+        if len(watchers) > 0:
+            watchers += ", "
+        watchers += watcher.name
+    if watchers is "":
+        return ""
+    else:
+        return " :eyes: _"+watchers+"_"
 
 """
     Time conversion helper functions
