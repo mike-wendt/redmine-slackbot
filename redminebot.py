@@ -904,7 +904,7 @@ def rm_sum_time_entries_user_week(userid):
 
 def rm_get_top5(userid, priority):
     try:
-        return rc.issue.filter(sort='created_on', project_id=REDMINE_TOP5_PROJECT, author_id=userid, status_id='open', priority_id=priority)
+        return rc.issue.filter(sort='created_on', project_id=REDMINE_TOP5_PROJECT, subproject_id='!*', author_id=userid, status_id='open', priority_id=priority)
     except:
         traceback.print_exc(file=sys.stderr)
         raise RuntimeError(":x: Failed to find Top 5 for user `"+username+"` in Redmine")
