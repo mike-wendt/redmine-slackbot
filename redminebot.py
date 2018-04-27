@@ -326,8 +326,11 @@ def link_issue(issue):
 def summarize_issue(issue):
     issue = rm_get_issue(issue)
     try:
+        watchers = issue_watchers(issue)
         response = ":bulb: *Issue Summary:*\n"
         response += issue_detail(issue, extended=True, user=True, description=True)
+        if watchers != "":
+            response += "*Watchers:*\n> "+watchers+"\n"
         response += "*Changes:*\n"
         response += issue_journal_details(issue)
         return response
