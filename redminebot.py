@@ -767,7 +767,7 @@ def cmd_watcher_add(text, issueid, username, watchername):
         text = parse_usernames(text)
         issue.watcher.add(watcher.id)
         # log action as a comment
-        log = "> _"+user.firstname+" "+user.lastname+"_ added _"+watcher.firstname+" "+watcher.lastname+"_ as a watcher"
+        log = "* _"+user.firstname+" "+user.lastname+"_ added _"+watcher.firstname+" "+watcher.lastname+"_ as a watcher"
         if text != "":
             text = log+"\n\n"+text
         else:
@@ -792,7 +792,7 @@ def cmd_watcher_delete(text, issueid, username, watchername):
         text = parse_usernames(text)
         issue.watcher.remove(watcher.id)
         # log action as a comment
-        log = "> _"+user.firstname+" "+user.lastname+"_ removed _"+watcher.firstname+" "+watcher.lastname+"_ as a watcher"
+        log = "* _"+user.firstname+" "+user.lastname+"_ removed _"+watcher.firstname+" "+watcher.lastname+"_ as a watcher"
         if text != "":
             text = log+"\n\n"+text
         else:
