@@ -776,7 +776,7 @@ def cmd_watcher_add(text, issueid, username, watchername):
         watchers = issue_watchers(issue)
         if watchers != "":
             watchers = "\n*Watchers:*\n> "+watchers+"\n"
-        return ":eyes: Added _"+watcher.firstname+" "+watcher.lastname+"_ as watcher to "+issue_subject_url(issue.id,issue.subject)+comment+watchers
+        return ":eyes: Added _"+watcher.firstname+" "+watcher.lastname+"_ as watcher of "+issue_subject_url(issue.id,issue.subject)+comment+watchers
     except:
         traceback.print_exc(file=sys.stderr)
         raise RuntimeError(":x: Watcher addition failed")
@@ -804,7 +804,7 @@ def cmd_watcher_delete(text, issueid, username, watchername):
         watchers = issue_watchers(issue)
         if watchers != "":
             watchers = "\n*Watchers:*\n> "+watchers+"\n"
-        return ":eyes: Removed _"+watcher.firstname+" "+watcher.lastname+"_ as watcher from "+issue_subject_url(issue.id,issue.subject)+comment+watchers
+        return ":eyes: Removed _"+watcher.firstname+" "+watcher.lastname+"_ as watcher of "+issue_subject_url(issue.id,issue.subject)+comment+watchers
     except:
         traceback.print_exc(file=sys.stderr)
         raise RuntimeError(":x: Watcher deletion failed")
