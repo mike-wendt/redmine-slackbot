@@ -338,6 +338,8 @@ def show_commands():
             "> Meaning of emojis used to tag issues, see <https://github.com/mike-wendt/redmine-slackbot/wiki/Issue-Emoji-Meanings|Emoji Meanings>\n" \
             "> Full help with examples, see <https://github.com/mike-wendt/redmine-slackbot/wiki|Usage Guide>\n"
 
+### Issue Info commands
+
 def link_issue(issue):
     issue = rm_get_issue(issue)
     return ":mag: "+issue_subject_url(issue.id,issue.subject)
@@ -356,6 +358,8 @@ def summarize_issue(issue):
     except:
         traceback.print_exc(file=sys.stderr)
         raise RuntimeError(":x: Summarize operation failed")
+
+### Issue commands
 
 def assign_issue(text, issue, username, assigneduser):
     user = rm_get_user(username)
@@ -378,7 +382,7 @@ def assign_issue(text, issue, username, assigneduser):
 def update_issue(text, issue, username):
     user = rm_get_user(username)
     issue = rm_get_issue(issue)
-    # impersonate user so it looks like the update is from them
+    # impersonate user so it looks like the action is from them
     rcn = rm_impersonate(user.login)
     try:
         (estimate, record, percent) = parse_keywords(text)
@@ -393,7 +397,7 @@ def status_issue(text, issue, status, username):
     user = rm_get_user(username)
     issue = rm_get_issue(issue)
     statusid, statusname = get_status(status)
-    # impersonate user so it looks like the update is from them
+    # impersonate user so it looks like the action is from them
     rcn = rm_impersonate(user.login)
     try:
         (estimate, record, percent) = parse_keywords(text)
@@ -408,7 +412,7 @@ def close_issue(text, issue, username):
     user = rm_get_user(username)
     issue = rm_get_issue(issue)
     today = datetime.today().date()
-    # impersonate user so it looks like the update is from them
+    # impersonate user so it looks like the action is from them
     rcn = rm_impersonate(user.login)
     try:
         (estimate, record, percent) = parse_keywords(text)
@@ -425,7 +429,7 @@ def reject_issue(text, issue, username):
     user = rm_get_user(username)
     issue = rm_get_issue(issue)
     today = datetime.today().date()
-    # impersonate user so it looks like the update is from them
+    # impersonate user so it looks like the action is from them
     rcn = rm_impersonate(user.login)
     try:
         (estimate, record, percent) = parse_keywords(text)
@@ -474,7 +478,7 @@ def rank_issue(text, issue, username, rank):
     user = rm_get_user(username)
     issue = rm_get_issue(issue)
     priority = parse_rank(rank)
-    # impersonate user so it looks like the update is from them
+    # impersonate user so it looks like the action is from them
     rcn = rm_impersonate(user.login)
     try:
         (estimate, record, percent) = parse_keywords(text)
@@ -484,6 +488,8 @@ def rank_issue(text, issue, username, rank):
     except:
         traceback.print_exc(file=sys.stderr)
         raise RuntimeError(":x: Issue rank update failed")
+
+### List commands
 
 def list_issues(username, project):
     user = rm_get_user(username)
@@ -530,6 +536,8 @@ def list_unassigned_issues(project):
     except:
         traceback.print_exc(file=sys.stderr)
         raise RuntimeError(":x: List unassigned operation failed")
+
+### Scrum, EOD, EOW commands
 
 def daily_scrum(username):
     user = rm_get_user(username)
@@ -689,6 +697,8 @@ def weekly_eow(username):
         traceback.print_exc(file=sys.stderr)
         raise RuntimeError(":x: EOW operation failed")
 
+### Top 5 commands
+
 def list_top5(username):
     user = rm_get_user(username)
     try:
@@ -715,7 +725,7 @@ def list_top5(username):
 def create_top5(text, username, rank):
     user = rm_get_user(username)
     priority = parse_rank(rank)
-    # impersonate user so it looks like the update is from them
+    # impersonate user so it looks like the action is from them
     rcn = rm_impersonate(user.login)
     try:
         (estimate, clean_text) = parse_remove_estimate(text)
@@ -730,7 +740,7 @@ def rank_top5(text, issue, username, rank):
     user = rm_get_user(username)
     issue = rm_get_issue(issue)
     priority = parse_rank(rank)
-    # impersonate user so it looks like the update is from them
+    # impersonate user so it looks like the action is from them
     rcn = rm_impersonate(user.login)
     try:
         (estimate, record, percent) = parse_keywords(text)
