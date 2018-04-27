@@ -1089,7 +1089,7 @@ def issue_detail(issue, extended=False, user=False, description=False):
     if user:
         username = issue_user(issue)
         response += username
-    if description and description in issue and issue.description != "":
+    if description and "description" in issue and issue.description != "":
         response += "\n*Description:*\n"+issue_comment(issue.description)
     else:
         response += "\n"
