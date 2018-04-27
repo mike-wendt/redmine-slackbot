@@ -361,10 +361,10 @@ def assign_issue(text, issue, username, assigneduser):
     user = rm_get_user(username)
     assigned = rm_get_user(assigneduser)
     issue = rm_get_issue(issue)
-    comment = " with comment \n"+issue_comment(text)
-    if text == "":
-        comment = ""
-    # impersonate user so it looks like the update is from them
+    comment = ""
+    if text != "":
+        comment = " with comment \n"+issue_comment(text)
+    # impersonate user so it looks like the action is from them
     rcn = rm_impersonate(user.login)
     try:
         (estimate, record, percent) = parse_keywords(text)
