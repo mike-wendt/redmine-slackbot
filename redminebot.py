@@ -370,7 +370,7 @@ def assign_issue(text, issue, username, assigneduser):
         (estimate, record, percent) = parse_keywords(text)
         text = parse_usernames(text)
         rm_update_issue(issue=issue.id, notes=text, rcn=rcn, estimate=estimate, record=record, percent=percent, assigned=assigned.id)
-        return ":bookmark: Assigned "+issue_subject_url(issue.id,issue.subject)+" to "+assigned.firstname+" "+assigned.lastname+comment
+        return ":bookmark: Assigned "+issue_subject_url(issue.id,issue.subject)+" to _"+assigned.firstname+" "+assigned.lastname+"_ "+comment
     except:
         traceback.print_exc(file=sys.stderr)
         raise RuntimeError(":x: Issue assign failed")
@@ -442,13 +442,13 @@ def create_issue(text, username, assigneduser, project_name):
     user = rm_get_user(username)
     assigned = rm_get_user(assigneduser)
     project = rm_get_project(project_name)
-    # impersonate user so it looks like the update is from them
+    # impersonate user so it looks like the action is from them
     rcn = rm_impersonate(user.login)
     try:
         (estimate, clean_text) = parse_remove_estimate(text)
         text = parse_usernames(text)
         issue = rm_create_issue(estimate=estimate, subject=clean_text, rcn=rcn, assigned=assigned.id, project=project.identifier)
-        return ":white_check_mark: Created "+issue_subject_url(issue.id,issue.subject)+" in project "+issue_project(project)+" assigned to "+assigned.firstname+" "+assigned.lastname
+        return ":white_check_mark: Created "+issue_subject_url(issue.id,issue.subject)+" in project "+issue_project(project)+" assigned to _"+assigned.firstname+" "+assigned.lastname+"_"
     except:
         traceback.print_exc(file=sys.stderr)
         raise RuntimeError(":x: Issue creation failed")
@@ -458,13 +458,13 @@ def create_issue_version(text, username, assigneduser, project_name, version_nam
     assigned = rm_get_user(assigneduser)
     project = rm_get_project(project_name)
     version = rm_get_version(project_name, version_name)
-    # impersonate user so it looks like the update is from them
+    # impersonate user so it looks like the action is from them
     rcn = rm_impersonate(user.login)
     try:
         (estimate, clean_text) = parse_remove_estimate(text)
         text = parse_usernames(text)
         issue = rm_create_issue(estimate=estimate, subject=clean_text, rcn=rcn, assigned=assigned.id, project=project.identifier, version=version.id)
-        return ":white_check_mark: Created "+issue_subject_url(issue.id,issue.subject)+" in project "+issue_project(project)+" with version `"+version.name+"` assigned to "+assigned.firstname+" "+assigned.lastname
+        return ":white_check_mark: Created "+issue_subject_url(issue.id,issue.subject)+" in project "+issue_project(project)+" with version `"+version.name+"` assigned to _"+assigned.firstname+" "+assigned.lastname+"_"
         return ""+str(version)
     except:
         traceback.print_exc(file=sys.stderr)
