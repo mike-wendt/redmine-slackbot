@@ -57,6 +57,11 @@ URL; all text to the right of `project/` is the identifier
  * For example: the project identifier is `general` from the URL `http://redmine/projects/general`
 6. Create a project called 'Top5' or specify another project by its identifier
 for all Top 5 issues to use
+ * **NOTE:** To allow Top 5 Issues to have subtasks in any project, the group
+ needs to be the root of all other projects, adjust all projects for this setup
+ or use the exisiting root project as the Top 5 project
+   * The Top 5 Issues are based off of the person who creates them allowing them
+   to be tracked but still assigned to other people
 7. Locate the ID for the tracker to use when creating new issues
  * Go to `http://redmine/trackers` and click on the tracker you would like to
 use, the number in the URL will be the ID
