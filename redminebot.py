@@ -1019,7 +1019,7 @@ def issue_user(issue):
 
 def issue_top5_user(issue):
     if check_key_exists(issue, 'assigned_to') and issue.assigned_to.name != issue.author.name:
-        return " :bookmark: "+issue.assigned_to.name
+        return " :bookmark: *"+issue.assigned_to.name+"*"
     else:
         return ""
 
