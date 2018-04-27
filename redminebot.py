@@ -1161,10 +1161,16 @@ def issue_journal_details(issue):
                     change = "Tracker"
                 elif detail['name'] == "assigned_to_id":
                     change = "Assigned"
-                    old_user = rm_get_user_by_id(detail['old_value'])
-                    old = old_user.firstname+" "+old_user.lastname
-                    new_user = rm_get_user_by_id(detail['new_value'])
-                    new = new_user.firstname+" "+new_user.lastname
+                    if 'old_value' in detail:
+                        old_user = rm_get_user_by_id(detail['old_value'])
+                        old = old_user.firstname+" "+old_user.lastname
+                    else:
+                        old = "Unassigned"
+                    if 'new_value' in detail:
+                        new_user = rm_get_user_by_id(detail['new_value'])
+                        new = new_user.firstname+" "+new_user.lastname
+                    else:
+                        new = "Unassigned"
                 else:
                     change = detail['name']
 
