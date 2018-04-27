@@ -66,6 +66,19 @@ for all Top 5 issues to use
  * Go to `http://redmine/trackers` and click on the tracker you would like to
 use, the number in the URL will be the ID
  * For example: the tracker `Task` ID is `2` from this URL `http://redmine/trackers/2/edit`
+8. Create a new custom query to find watched issues for any user with the
+following:
+ * Name - `Your Watched Issues`
+ * Visible - `to any users`
+ * For all projects - `checked`
+ * Filters
+   * Status - `open`
+   * Watcher - `is` and `<< me >>`
+   * Assignee - `is not` and `<< me >>`
+ * Save query
+ * Click the link on the right-hand side `Your Watched Issues` under the section
+ **Custom queries**, select this link and record the value of `query_id` for
+ the value of `REDMINE_WATCHED_QUERY_ID`
 
 ### Saving config
 
@@ -90,6 +103,7 @@ export REDMINE_ACTIVITY_ID="12"
 export REDMINE_PROJECT="general"
 export REDMINE_TOP5_PROJECT="top5"
 export REDMINE_TRACKER_ID="2"
+export REDMINE_WATCHED_QUERY_ID="14"
 export BOT_ID="<from print_bot_id.py>"
 export BOT_TOKEN="<slack api token>"
 ```

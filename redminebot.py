@@ -26,6 +26,7 @@ REDMINE_ACTIVITY_ID = os.environ.get('REDMINE_ACTIVITY_ID')
 REDMINE_PROJECT = os.environ.get('REDMINE_PROJECT')
 REDMINE_TOP5_PROJECT = os.environ.get('REDMINE_TOP5_PROJECT')
 REDMINE_TRACKER_ID = os.environ.get('REDMINE_TRACKER_ID')
+REDMINE_WATCHED_QUERY_ID = os.environ.get('REDMINE_WATCHED_QUERY_ID')
 BOT_ID = os.environ.get('BOT_ID')
 BOT_TOKEN = os.environ.get('BOT_TOKEN')
 
@@ -520,6 +521,13 @@ def daily_scrum(username):
                 response += "*_"+STATUS_NAME_LOOKUP[s]+" ("+str(len(result))+")_*\n"
                 for issue in result:
                     response += issue_detail(issue, extended=True, user=False)
+        # check for issues user is a watcher
+        watching = rm_get_user_issues_watched(user.login)
+        if len(watching) > 0:
+            issues_found = True
+            response += ":eyes: *_Watched ("+str(len(watching))+")_*\n"
+            for issue in watching:
+                response += issue_detail(issue, extended=True, user=True)
         if not issues_found:
             response += ":thumbsup_all: No issues found!\n"
         return response
@@ -578,6 +586,13 @@ def daily_eod(username):
             response += "*_Contributions ("+str(len(time_entries))+") Hours: "+str(contribution_hours)+"_*\n"
             response += issue_details
             total_hours += contribution_hours
+        # check for issues user is a watcher
+        watching = rm_get_user_issues_watched(user.login)
+        if len(watching) > 0:
+            issues_found = True
+            response += ":eyes: *_Watched ("+str(len(watching))+")_*\n"
+            for issue in watching:
+                response += issue_detail(issue, extended=True, user=True)
         response += "*_Total Hours: "+str(total_hours)+"_*\n"
         if not issues_found:
             response += ":thumbsup_all: No issues found!\n"
@@ -637,6 +652,13 @@ def weekly_eow(username):
             response += "*_Contributions ("+str(len(time_entries))+") Hours: "+str(contribution_hours)+"_*\n"
             response += issue_details
             total_hours += contribution_hours
+        # check for issues user is a watcher
+        watching = rm_get_user_issues_watched(user.login)
+        if len(watching) > 0:
+            issues_found = True
+            response += ":eyes: *_Watched ("+str(len(watching))+")_*\n"
+            for issue in watching:
+                response += issue_detail(issue, extended=True, user=True)
         response += "*_Total Hours: "+str(total_hours)+"_*\n"
         if not issues_found:
             response += ":thumbsup_all: No issues found!\n"
@@ -776,6 +798,14 @@ def rm_get_user_issues_week(userid, status):
     except:
         traceback.print_exc(file=sys.stderr)
         raise RuntimeError(":x: Failed to find issues for user `"+username+"` in Redmine")
+
+def rm_get_user_issues_watched(userlogin):
+    try:
+        rcn = rm_impersonate(userlogin)
+        return rcn.issue.filter(sort='priority:desc', query_id=REDMINE_WATCHED_QUERY_ID)
+    except:
+        traceback.print_exc(file=sys.stderr)
+        raise RuntimeError(":x: Failed to find watched issues for user `"+username+"` in Redmine")
 
 def rm_get_user_issues_date(userid, status, date):
     if not status:
