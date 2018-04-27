@@ -93,29 +93,29 @@ def handle_command(command, channel, user, username):
             if operator == "issueto" and len(commands) > 2:
                 assigneduser = commands[1]
                 msg = s.join(commands[2:])
-                response = create_issue(msg, username, assigneduser, REDMINE_PROJECT)
+                response = cmd_create_issue(msg, username, assigneduser, REDMINE_PROJECT)
             elif operator == "issue" and len(commands) > 1:
-                response = create_issue(msg, username, username, REDMINE_PROJECT)
+                response = cmd_create_issue(msg, username, username, REDMINE_PROJECT)
             elif operator == "issuepto" and len(commands) > 3:
                 project = commands[1]
                 assigneduser = commands[2]
                 msg = s.join(commands[3:])
-                response = create_issue(msg, username, assigneduser, project)
+                response = cmd_create_issue(msg, username, assigneduser, project)
             elif operator == "issuep" and len(commands) > 2:
                 project = commands[1]
                 msg = s.join(commands[2:])
-                response = create_issue(msg, username, username, project)
+                response = cmd_create_issue(msg, username, username, project)
             elif operator == "issuepvto" and len(commands) > 4:
                 project = commands[1]
                 version = commands[2]
                 assigneduser = commands[3]
                 msg = s.join(commands[4:])
-                response = create_issue_version(msg, username, assigneduser, project, version)
+                response = cmd_create_issue_version(msg, username, assigneduser, project, version)
             elif operator == "issuepv" and len(commands) > 3:
                 project = commands[1]
                 version = commands[2]
                 msg = s.join(commands[3:])
-                response = create_issue_version(msg, username, username, project, version)
+                response = cmd_create_issue_version(msg, username, username, project, version)
             elif operator == "assign" and len(commands) > 2:
                 issue = commands[1]
                 assigneduser = commands[2]
@@ -123,88 +123,88 @@ def handle_command(command, channel, user, username):
                     msg = s.join(commands[3:])
                 else:
                     msg = ""
-                response = assign_issue(msg, issue, username, assigneduser)
+                response = cmd_assign_issue(msg, issue, username, assigneduser)
             elif operator == "update" and len(commands) > 2:
                 issue = commands[1]
                 msg = s.join(commands[2:])
-                response = update_issue(msg, issue, username)
+                response = cmd_update_issue(msg, issue, username)
             elif operator == "status" and len(commands) > 3:
                 issue = commands[1]
                 status = commands[2]
                 msg = s.join(commands[3:])
-                response = status_issue(msg, issue, status, username)
+                response = cmd_status_issue(msg, issue, status, username)
             elif operator == "close" and len(commands) > 2:
                 issue = commands[1]
                 msg = s.join(commands[2:])
-                response = close_issue(msg, issue, username)
+                response = cmd_close_issue(msg, issue, username)
             elif operator == "reject" and len(commands) > 2:
                 issue = commands[1]
                 msg = s.join(commands[2:])
-                response = reject_issue(msg, issue, username)
+                response = cmd_reject_issue(msg, issue, username)
             elif operator == "rank" and len(commands) > 3:
                 issue = commands[1]
                 rank = commands[2]
                 msg = s.join(commands[3:])
-                response = rank_issue(msg, issue, username, rank)
+                response = cmd_rank_issue(msg, issue, username, rank)
             elif operator == "list":
                 if len(commands) > 1:
                     project = commands[1]
                 else:
                     project = None
-                response = list_issues(username, project)
+                response = cmd_list_issues(username, project)
             elif operator == "listall":
                 if len(commands) > 1:
                     project = commands[1]
                 else:
                     project = None
-                response = list_all_issues(project)
+                response = cmd_list_all_issues(project)
             elif operator == "listun":
                 if len(commands) > 1:
                     project = commands[1]
                 else:
                     project = None
-                response = list_unassigned_issues(project)
+                response = cmd_list_unassigned_issues(project)
             elif operator == "listfor" and len(commands) > 1:
                 listuser = commands[1]
                 if len(commands) > 2:
                     project = commands[2]
                 else:
                     project = None
-                response = list_issues(listuser, project)
+                response = cmd_list_issues(listuser, project)
             elif operator == "scrum":
-                response = daily_scrum(username)
+                response = cmd_daily_scrum(username)
             elif operator == "scrumfor" and len(commands) > 1:
                 listuser = commands[1]
-                response = daily_scrum(listuser)
+                response = cmd_daily_scrum(listuser)
             elif operator == "eod":
-                response = daily_eod(username)
+                response = cmd_daily_eod(username)
             elif operator == "eodfor" and len(commands) > 1:
                 listuser = commands[1]
-                response = daily_eod(listuser)
+                response = cmd_daily_eod(listuser)
             elif operator == "eow":
-                response = weekly_eow(username)
+                response = cmd_weekly_eow(username)
             elif operator == "eowfor" and len(commands) > 1:
                 listuser = commands[1]
-                response = weekly_eow(listuser)
+                response = cmd_weekly_eow(listuser)
             elif operator == "t5":
-                response = list_top5(username)
+                response = cmd_list_top5(username)
             elif operator == "t5for" and len(commands) > 1:
                 t5user = commands[1]
-                response = list_top5(t5user)
+                response = cmd_list_top5(t5user)
             elif operator == "t5add" and len(commands) > 2:
                 rank = commands[1]
                 msg = s.join(commands[2:])
-                response = create_top5(msg, username, rank)
+                response = cmd_create_top5(msg, username, rank)
             elif operator == "t5rank" and len(commands) > 3:
                 issue = commands[1]
                 rank = commands[2]
                 msg = s.join(commands[3:])
-                response = rank_top5(msg, issue, username, rank)
+                response = cmd_rank_top5(msg, issue, username, rank)
             elif operator == "help":
                 response = show_commands()
             elif operator == "sum" and len(commands) > 1:
                 issue = commands[1]
-                response = summarize_issue(issue)
+                response = cmd_summarize_issue(issue)
             elif operator == "wadd" and len(commands) > 2:
                 issue = commands[1]
                 watcher = commands[2]
@@ -223,7 +223,7 @@ def handle_command(command, channel, user, username):
                 response = cmd_watcher_delete(msg, issue, username, watcher)
             elif int(commands[0]) > 0:
                 issue = int(commands[0])
-                response = link_issue(issue)
+                response = cmd_link_issue(issue)
     except ValueError:
         respone = show_commands()
     except RuntimeError as e:
@@ -340,11 +340,11 @@ def show_commands():
 
 ### Issue Info commands
 
-def link_issue(issue):
+def cmd_link_issue(issue):
     issue = rm_get_issue(issue)
     return ":mag: "+issue_subject_url(issue.id,issue.subject)
 
-def summarize_issue(issue):
+def cmd_summarize_issue(issue):
     issue = rm_get_issue(issue)
     try:
         watchers = issue_watchers(issue)
@@ -361,7 +361,7 @@ def summarize_issue(issue):
 
 ### Issue commands
 
-def assign_issue(text, issue, username, assigneduser):
+def cmd_assign_issue(text, issue, username, assigneduser):
     user = rm_get_user(username)
     assigned = rm_get_user(assigneduser)
     issue = rm_get_issue(issue)
@@ -379,7 +379,7 @@ def assign_issue(text, issue, username, assigneduser):
         traceback.print_exc(file=sys.stderr)
         raise RuntimeError(":x: Issue assign failed")
 
-def update_issue(text, issue, username):
+def cmd_update_issue(text, issue, username):
     user = rm_get_user(username)
     issue = rm_get_issue(issue)
     # impersonate user so it looks like the action is from them
@@ -393,7 +393,7 @@ def update_issue(text, issue, username):
         traceback.print_exc(file=sys.stderr)
         raise RuntimeError(":x: Issue update failed")
 
-def status_issue(text, issue, status, username):
+def cmd_status_issue(text, issue, status, username):
     user = rm_get_user(username)
     issue = rm_get_issue(issue)
     statusid, statusname = get_status(status)
@@ -408,7 +408,7 @@ def status_issue(text, issue, status, username):
         traceback.print_exc(file=sys.stderr)
         raise RuntimeError(":x: Issue status update failed")
 
-def close_issue(text, issue, username):
+def cmd_close_issue(text, issue, username):
     user = rm_get_user(username)
     issue = rm_get_issue(issue)
     today = datetime.today().date()
@@ -425,7 +425,7 @@ def close_issue(text, issue, username):
         traceback.print_exc(file=sys.stderr)
         raise RuntimeError(":x: Issue closing failed")
 
-def reject_issue(text, issue, username):
+def cmd_reject_issue(text, issue, username):
     user = rm_get_user(username)
     issue = rm_get_issue(issue)
     today = datetime.today().date()
@@ -442,7 +442,7 @@ def reject_issue(text, issue, username):
         traceback.print_exc(file=sys.stderr)
         raise RuntimeError(":x: Issue rejecting failed")
 
-def create_issue(text, username, assigneduser, project_name):
+def cmd_create_issue(text, username, assigneduser, project_name):
     user = rm_get_user(username)
     assigned = rm_get_user(assigneduser)
     project = rm_get_project(project_name)
@@ -457,7 +457,7 @@ def create_issue(text, username, assigneduser, project_name):
         traceback.print_exc(file=sys.stderr)
         raise RuntimeError(":x: Issue creation failed")
 
-def create_issue_version(text, username, assigneduser, project_name, version_name):
+def cmd_create_issue_version(text, username, assigneduser, project_name, version_name):
     user = rm_get_user(username)
     assigned = rm_get_user(assigneduser)
     project = rm_get_project(project_name)
@@ -474,7 +474,7 @@ def create_issue_version(text, username, assigneduser, project_name, version_nam
         traceback.print_exc(file=sys.stderr)
         raise RuntimeError(":x: Issue creation failed")
 
-def rank_issue(text, issue, username, rank):
+def cmd_rank_issue(text, issue, username, rank):
     user = rm_get_user(username)
     issue = rm_get_issue(issue)
     priority = parse_rank(rank)
@@ -491,7 +491,7 @@ def rank_issue(text, issue, username, rank):
 
 ### List commands
 
-def list_issues(username, project):
+def cmd_list_issues(username, project):
     user = rm_get_user(username)
     try:
         result = rm_get_user_issues(user.id, 'open', project)
@@ -507,7 +507,7 @@ def list_issues(username, project):
         traceback.print_exc(file=sys.stderr)
         raise RuntimeError(":x: List operation failed")
 
-def list_all_issues(project):
+def cmd_list_all_issues(project):
     try:
         result = rm_get_all_issues('open', False, project)
         response = ""
@@ -522,7 +522,7 @@ def list_all_issues(project):
         traceback.print_exc(file=sys.stderr)
         raise RuntimeError(":x: List all operation failed")
 
-def list_unassigned_issues(project):
+def cmd_list_unassigned_issues(project):
     try:
         result = rm_get_all_issues('open', True, project)
         response = ""
@@ -539,7 +539,7 @@ def list_unassigned_issues(project):
 
 ### Scrum, EOD, EOW commands
 
-def daily_scrum(username):
+def cmd_daily_scrum(username):
     user = rm_get_user(username)
     try:
         response = ":newspaper: *Daily Scrum Report for "+user.firstname+" "+user.lastname+":*\n"
@@ -565,7 +565,7 @@ def daily_scrum(username):
         traceback.print_exc(file=sys.stderr)
         raise RuntimeError(":x: Scrum operation failed")
 
-def daily_eod(username):
+def cmd_daily_eod(username):
     user = rm_get_user(username)
     try:
         response = ":newspaper: *End of Day Report for "+user.firstname+" "+user.lastname+":*\n"
@@ -631,7 +631,7 @@ def daily_eod(username):
         traceback.print_exc(file=sys.stderr)
         raise RuntimeError(":x: EOD operation failed")
 
-def weekly_eow(username):
+def cmd_weekly_eow(username):
     user = rm_get_user(username)
     try:
         response = ":newspaper: *End of Week Report for "+user.firstname+" "+user.lastname+":*\n"
@@ -699,7 +699,7 @@ def weekly_eow(username):
 
 ### Top 5 commands
 
-def list_top5(username):
+def cmd_list_top5(username):
     user = rm_get_user(username)
     try:
         top5_found = False
@@ -722,7 +722,7 @@ def list_top5(username):
         traceback.print_exc(file=sys.stderr)
         raise RuntimeError(":x: Top 5 list operation failed")
 
-def create_top5(text, username, rank):
+def cmd_create_top5(text, username, rank):
     user = rm_get_user(username)
     priority = parse_rank(rank)
     # impersonate user so it looks like the action is from them
@@ -736,7 +736,7 @@ def create_top5(text, username, rank):
         traceback.print_exc(file=sys.stderr)
         raise RuntimeError(":x: Top 5 creation failed")
 
-def rank_top5(text, issue, username, rank):
+def cmd_rank_top5(text, issue, username, rank):
     user = rm_get_user(username)
     issue = rm_get_issue(issue)
     priority = parse_rank(rank)
